@@ -1,0 +1,20 @@
+#chat_window {
+    border: 1px solid powderblue;
+    width: 400px;
+    height: 400px;
+    overflow: auto;
+    margin: 0 auto;
+}
+
+#input_form {
+    width: 400px;
+    margin: 0 auto;
+}
+
+#chat_input {
+    width: 80%;
+}
+
+#chat_button {
+    width: 20%;
+}
