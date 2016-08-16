@@ -12,6 +12,7 @@ def user_connected(data):
     data['username'] = 'Reggie'
     message = "{} has joined the chat".format(data['username'])
     emit('user_joined', message, broadcast=True)
+    emit('assign_username', data)
 
 @socketio.on('chat_message')
 def handle_chat_message(message):

@@ -4,8 +4,8 @@ from urllib.request import urlopen
 from flask import Flask
 #from flask_testing import TestCase, LiveServerTestCase
 
-
 from ratchat import app, socketio
+
 
 class TestChatBasics(unittest.TestCase):
 
@@ -42,17 +42,28 @@ class TestChatBasics(unittest.TestCase):
         self.assertEqual(received1[0]['args'][0]['msg'], "test message")
         self.assertEqual(received2[0]['args'][0]['msg'], "test message")
 
-
         client1.disconnect()
         client2.disconnect()
 
     def test_broadcast_message_when_user_joins(self):
-        assert(False)
+        client1 = socketio.test_client(app)
+        client2 = socketio.test_client(app)
+        client1.get_received()
+        client2.get_received()
+
+        client1.emit('connected', {})
+        received1 = client1.get_received()
+        received2 = client2.get_received()
+        self.assertEqual(received2[0]['name'], 'user_joined')
+
+        client1.disconnect()
+        client2.disconnect()
 
     def test_username_is_assigned_on_connect(self):
         client = socketio.test_client(app)
-        received = client.get_received()
+        client.get_received()
         client.emit('connected', {})
         received = client.get_received()
-        print(received)
-        assert(False)
+        print(received[1])
+        self.assertEqual(received[0]['name'], 'user_joined')
+        self.assertEqual(received[1]['args'][0]['username'], 'Reggie')
