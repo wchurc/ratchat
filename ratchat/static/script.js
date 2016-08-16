@@ -4,18 +4,28 @@ function escape(str) {
     return div.innerHTML;
 }
 
+function update_chat(message) {
+  $('#chat_window').append(message + "<br>");
+  $('#chat_window').scrollTop($('#chat_window')[0].scrollHeight);
+}
+
+var chatuser = "new user";
+
 $(document).ready( function() {
 
     var socket = io.connect('http://' + document.domain + ':' + location.port);
     //console.log("Doc domain: " + document.domain + " location.port " + location.port);
     socket.on('connect', function() {
-        socket.emit('my event', {data: 'I\'m connected!'});
+        socket.emit('connected', {data: 'I\'m connected!'});
     });
 
     socket.on('chat_message', function(data) {
-        $('#chat_window').append(data['msg'] + "<br>");
-        $('#chat_window').scrollTop($('#chat_window')[0].scrollHeight);
+        update_chat(data['msg'])
         $('#chat_input').val('').focus();
+    });
+
+    socket.on('user_joined', function(data) {
+      update_chat(data);
     });
 
     $('#input_form').submit( function(e) {

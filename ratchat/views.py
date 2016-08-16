@@ -1,14 +1,22 @@
 from flask import render_template
+from flask_socketio import emit, send
+
 from ratchat import app, socketio
 
 @app.route('/')
 def main():
     return render_template('index.html')
 
-@socketio.on('my event')
+@socketio.on('connected')
 def user_connected(data):
-    print(data)
+    data['username'] = 'Reggie'
+    message = "{} has joined the chat".format(data['username'])
+    emit('user_joined', message, broadcast=True)
 
 @socketio.on('chat_message')
 def handle_chat_message(message):
-    socketio.emit('chat_message', message, broadcast=True)
+    emit('chat_message', message, broadcast=True)
+
+@socketio.on('connect')
+def user_connected():
+   send('connected-test')
