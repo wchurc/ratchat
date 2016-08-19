@@ -45,6 +45,18 @@ class TestChatBasics(unittest.TestCase):
         client1.disconnect()
         client2.disconnect()
 
+    def test_username_is_assigned_on_connect(self):
+        client = socketio.test_client(app)
+        client.get_received()
+
+        client.emit('connected', {})
+        received = client.get_received()
+        print(received[1])
+
+        self.assertEqual(received[0]['name'], 'user_joined')
+        self.assertEqual(received[1]['args'][0]['username'], 'Reggie Chode')
+        client.disconnect()
+
     def test_broadcast_message_when_user_joins(self):
         client1 = socketio.test_client(app)
         client2 = socketio.test_client(app)
@@ -58,12 +70,3 @@ class TestChatBasics(unittest.TestCase):
 
         client1.disconnect()
         client2.disconnect()
-
-    def test_username_is_assigned_on_connect(self):
-        client = socketio.test_client(app)
-        client.get_received()
-        client.emit('connected', {})
-        received = client.get_received()
-        print(received[1])
-        self.assertEqual(received[0]['name'], 'user_joined')
-        self.assertEqual(received[1]['args'][0]['username'], 'Reggie')

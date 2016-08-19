@@ -9,7 +9,7 @@ function update_chat(message) {
   $('#chat_window').scrollTop($('#chat_window')[0].scrollHeight);
 }
 
-var chatuser = "new user";
+var username = "new user";
 
 $(document).ready( function() {
 
@@ -20,7 +20,7 @@ $(document).ready( function() {
     });
 
     socket.on('chat_message', function(data) {
-        update_chat(data['msg'])
+        update_chat(data['username'] + ": " + data['msg']);
         $('#chat_input').val('').focus();
     });
 
@@ -28,10 +28,18 @@ $(document).ready( function() {
       update_chat(data);
     });
 
+    socket.on('assign_username', function(data) {
+      username = data['username'];
+      update_chat('You have joined the chat as ' + chatuser);
+    });
+
     $('#input_form').submit( function(e) {
         e.preventDefault(); // prevents form from sending http request
 
-        socket.emit('chat_message', { msg: escape($('#chat_input').val())});
+        socket.emit('chat_message', { 
+          'msg': escape($('#chat_input').val()),
+          'username': username
+        });
 
         //$('#chat_window').append( escape($('#chat_input').val()) + "<br>");
         //$("#chat_window").scrollTop($("#chat_window")[0].scrollHeight);

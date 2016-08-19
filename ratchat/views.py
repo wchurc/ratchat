@@ -2,6 +2,8 @@ from flask import render_template
 from flask_socketio import emit, send
 
 from ratchat import app, socketio
+from ratchat.name_generator import get_name
+
 
 @app.route('/')
 def main():
@@ -9,7 +11,7 @@ def main():
 
 @socketio.on('connected')
 def user_connected(data):
-    data['username'] = 'Reggie'
+    data['username'] = get_name()
     message = "{} has joined the chat".format(data['username'])
     emit('user_joined', message, broadcast=True)
     emit('assign_username', data)
