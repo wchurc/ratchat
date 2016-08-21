@@ -24,8 +24,8 @@ $(document).ready( function() {
         $('#chat_input').val('').focus();
     });
 
-    socket.on('user_joined', function(data) {
-      update_chat(data);
+    socket.on('user_joined', function(joining_user) {
+      update_chat(joining_user + " has joined the chat");
     });
 
     socket.on('assign_username', function(data) {

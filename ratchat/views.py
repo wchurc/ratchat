@@ -25,8 +25,8 @@ def handle_connection():
 
     if not names.get(uid):
         names[uid] = get_name()
-        message = "{} has joined the chat".format(names[uid])
-        emit('user_joined', message, broadcast=True)
+        joining_user = names[uid]
+        emit('user_joined', joining_user, broadcast=True)
     data['username'] = names.get(uid)
     emit('assign_username', data)
 
