@@ -51,11 +51,19 @@ class TestChatBasics(unittest.TestCase):
 
         client.emit('connected', {})
         received = client.get_received()
-        print(received[1])
 
         self.assertEqual(received[0]['name'], 'user_joined')
-        self.assertEqual(received[1]['args'][0]['username'], 'Reggie Chode')
         client.disconnect()
+
+    def test_asssigned_usernames_are_unique(self):
+        names = set([])
+        for i in range(5):
+            client = socketio.test_client(app)
+            client.emit('connected', {})
+            received = client.get_received()
+            names.add(received[2]['args'][0]['username'])
+            client.disconnect()
+        self.assertEqual(len(names), 5)
 
     def test_broadcast_message_when_user_joins(self):
         client1 = socketio.test_client(app)

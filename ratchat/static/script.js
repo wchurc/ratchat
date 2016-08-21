@@ -30,7 +30,7 @@ $(document).ready( function() {
 
     socket.on('assign_username', function(data) {
       username = data['username'];
-      update_chat('You have joined the chat as ' + chatuser);
+      update_chat('You have joined the chat as ' + username);
     });
 
     $('#input_form').submit( function(e) {
