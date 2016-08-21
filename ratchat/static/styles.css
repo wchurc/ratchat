@@ -1,13 +1,13 @@
 #chat_window {
     border: 1px solid powderblue;
-    width: 400px;
-    height: 400px;
+    width: 80%;
+    height: 80%;
     overflow: auto;
     margin: 0 auto;
 }
 
 #input_form {
-    width: 400px;
+    width: 80%;
     margin: 0 auto;
 }
 
