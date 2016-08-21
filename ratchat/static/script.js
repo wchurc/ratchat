@@ -16,7 +16,7 @@ $(document).ready( function() {
     var socket = io.connect('http://' + document.domain + ':' + location.port);
     //console.log("Doc domain: " + document.domain + " location.port " + location.port);
     socket.on('connect', function() {
-        socket.emit('connected', {data: 'I\'m connected!'});
+        socket.emit('connected' ,{data: 'I\'m connected!'});
     });
 
     socket.on('chat_message', function(data) {
