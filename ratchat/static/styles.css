@@ -1,20 +1,38 @@
+.container {
+  width: 80%;
+  height: 80%;
+  margin: 0 auto;
+}
+
+#chat_users {
+  border: 1px solid powderblue;
+  width: 19%;
+  height: 100%;
+  overflow: auto;
+  float: right;
+}
+
 #chat_window {
     border: 1px solid powderblue;
     width: 80%;
-    height: 80%;
+    height: 100%;
     overflow: auto;
-    margin: 0 auto;
+    float: left;
 }
 
 #input_form {
-    width: 80%;
+    width: 100%;
     margin: 0 auto;
 }
 
 #chat_input {
-    width: 80%;
+    width: 90%;
 }
 
 #chat_button {
-    width: 20%;
+    width: 10%;
+}
+
+p {
+  margin: 0
 }

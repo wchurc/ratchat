@@ -14,24 +14,30 @@ def main():
     return render_template('index.html')
 
 
+def send_active_users():
+    data = [val for val in names.values()]
+    emit('active_users', data)
+
+
 @socketio.on('connect')
 def handle_connection():
-    data = {}
     uid = session.get('uid')
 
     if not uid:
-        session['uid'] = uuid.uuid4() # had to add for socketio test client
+        session['uid'] = uuid.uuid4()
         uid = session.get('uid')
 
     if not names.get(uid):
         names[uid] = get_name()
         joining_user = names[uid]
         emit('user_joined', joining_user, broadcast=True)
-    data['username'] = names.get(uid)
-    emit('assign_username', data)
+
+    send_active_users()
 
 
 @socketio.on('chat_message')
 def handle_chat_message(message):
+    uid = session['uid']
+    message['username'] = names[uid]
     emit('chat_message', message, broadcast=True)
 
