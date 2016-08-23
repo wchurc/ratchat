@@ -10,7 +10,7 @@ names = {}
 @app.route('/')
 def main():
     if not session.get('uid'):
-        session['uid'] = uuid.uuid4()
+        session['uid'] = uuid.uuid4().hex
     return render_template('index.html')
 
 
@@ -21,17 +21,17 @@ def send_active_users():
 
 @socketio.on('connect')
 def handle_connection():
+    global names
     uid = session.get('uid')
 
-    if not uid:
-        session['uid'] = uuid.uuid4()
+    if uid is None:
+        session['uid'] = uuid.uuid4().hex
         uid = session.get('uid')
 
-    if not names.get(uid):
+    if names.get(uid) is None:
         names[uid] = get_name()
         joining_user = names[uid]
         emit('user_joined', joining_user, broadcast=True)
-
     send_active_users()
 
 
