@@ -2,7 +2,7 @@ from flask import render_template, request, session
 from flask_socketio import emit, send
 import uuid
 
-from ratchat import app, socketio
+from ratchat import app, redis_db, socketio
 from ratchat.name_generator import get_name
 
 names = {}

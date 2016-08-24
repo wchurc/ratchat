@@ -112,3 +112,19 @@ class TestChatSockets(unittest.TestCase):
 
         client1.disconnect()
         client2.disconnect()
+
+
+class TestRedisDB(unittest.TestCase):
+    @classmethod
+    def setUp(cls):
+        pass
+
+    @classmethod
+    def tearDown(cls):
+        pass
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
