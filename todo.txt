@@ -1,0 +1,6 @@
+tests for redis
+plug in redis
+functional tests
+command parser
+rooms
+logins
