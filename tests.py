@@ -2,27 +2,10 @@ import time
 import unittest
 from urllib.request import urlopen
 from flask import Flask
-#from flask_testing import TestCase, LiveServerTestCase
+from fakeredis import FakeStrictRedis
 
-from ratchat import app, socketio
-from ratchat.views import names as names_dict
-
-
-def noisy_print(thing):
-    if isinstance(thing, dict):
-        print('\n' + '>'*50)
-        for key in thing:
-            print(key,' : ', thing[key])
-        print('\n' + '>'*50)
-
-    elif hasattr(thing, '__iter__'):
-        print('\n' + '>'*50)
-        for x in thing:
-            print(x)
-        print('\n' + '>'*50)
-
-    else:
-        print('\n' + '>'*50 + '\n', thing, '\n' + '<'*50 + '\n')
+from ratchat import app, socketio, redis_db
+from utils import noisy_print, create_db
 
 
 class TestChatHTTP(unittest.TestCase):
@@ -46,6 +29,7 @@ class TestChatHTTP(unittest.TestCase):
         self.assertEqual(rv.status_code, 200)
         assert b'<title>ratchat</title>' in rv.data
 
+
 class TestChatSockets(unittest.TestCase):
 
     @classmethod
@@ -57,10 +41,10 @@ class TestChatSockets(unittest.TestCase):
         pass
 
     def setUp(self):
-        pass
+        redis_db.flushall()
 
     def tearDown(self):
-        pass
+        redis_db.flushall()
 
     def test_connect(self):
         client = socketio.test_client(app)
@@ -124,7 +108,20 @@ class TestRedisDB(unittest.TestCase):
         pass
 
     def setUp(self):
-        pass
+        redis_db.flushall()
 
     def tearDown(self):
-        pass
+        redis_db.flushall()
+
+    def test_using_fake_redis_db(self):
+        assert isinstance(redis_db, FakeStrictRedis)
+
+    def test_testing_db(self):
+        redis_db.set('foo','bar')
+        foo = redis_db.get('foo')
+
+        self.assertEqual(foo, b'bar')
+
+    def test_testing_db_gets_cleaned(self):
+        self.assertFalse(redis_db.get('foo'))
+
