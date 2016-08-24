@@ -37,6 +37,7 @@ $(document).ready( function() {
 
     
     socket.on('active_users', function(data) {
+      console.log(data)
       if (data.length) {
         $('#chat_users').val('');
         for (var i = 0; i < data.length; i++) {

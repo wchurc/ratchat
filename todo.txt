@@ -1,6 +1,10 @@
-tests for redis
-plug in redis
+tests for temp names in redis
+plug in redis for temp names
+tests for chat room persistence
+set up redis for chat room persistence
 functional tests
+bootstrap for mobile friendliness
 command parser
 rooms
 logins
+cyberfy

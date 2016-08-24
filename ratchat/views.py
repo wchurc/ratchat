@@ -4,8 +4,9 @@ import uuid
 
 from ratchat import app, redis_db, socketio
 from ratchat.name_generator import get_name
+from utils import noisy_print
 
-names = {}
+#names = {}
 
 @app.route('/')
 def main():
@@ -15,22 +16,24 @@ def main():
 
 
 def send_active_users():
-    data = [val for val in names.values()]
+    data = [name.decode() for name in redis_db.hvals('temp_names')]
+    noisy_print(data)
     emit('active_users', data)
 
 
 @socketio.on('connect')
 def handle_connection():
-    global names
+ #   global names
     uid = session.get('uid')
 
     if uid is None:
         session['uid'] = uuid.uuid4().hex
         uid = session.get('uid')
 
-    if names.get(uid) is None:
-        names[uid] = get_name()
-        joining_user = names[uid]
+    if redis_db.hget('temp_names', uid) is None:
+        name = get_name()
+        redis_db.hset('temp_names', uid, name)
+        joining_user = name
         emit('user_joined', joining_user, broadcast=True)
     send_active_users()
 
@@ -38,6 +41,6 @@ def handle_connection():
 @socketio.on('chat_message')
 def handle_chat_message(message):
     uid = session['uid']
-    message['username'] = names[uid]
+    message['username'] = redis_db.hget('temp_names', uid).decode()
     emit('chat_message', message, broadcast=True)
 
