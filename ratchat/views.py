@@ -4,9 +4,7 @@ import uuid
 
 from ratchat import app, redis_db, socketio
 from ratchat.name_generator import get_name
-from utils import noisy_print
 
-#names = {}
 
 @app.route('/')
 def main():
@@ -17,7 +15,6 @@ def main():
 
 def send_active_users():
     data = [name.decode() for name in redis_db.hvals('temp_names')]
-    noisy_print(data)
     emit('active_users', data)
 
 

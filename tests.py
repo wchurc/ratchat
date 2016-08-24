@@ -30,6 +30,7 @@ class TestChatHTTP(unittest.TestCase):
         assert b'<title>ratchat</title>' in rv.data
 
 
+
 class TestChatSockets(unittest.TestCase):
 
     @classmethod
@@ -96,6 +97,13 @@ class TestChatSockets(unittest.TestCase):
 
         client1.disconnect()
         client2.disconnect()
+
+    def test_chat_loads_with_recent_messages(self):
+        client1 = socketio.test_client(app)
+        client1.emit('chat_message', {'msg': 'Hello Room'})
+        client2 = socketio.test_client(app)
+        received = client2.get_received()
+        self.assertEqual(received[0]['name'], 'recent_messages')
 
 
 class TestRedisDB(unittest.TestCase):
