@@ -47,10 +47,15 @@ class TestChatSockets(unittest.TestCase):
     def tearDown(self):
         redis_db.flushall()
 
+    def get_relevant(self, string, received):
+        for x in received:
+            if x.get('name') == string:
+                return x
+
     def test_connect(self):
         client = socketio.test_client(app)
         received = client.get_received()
-        self.assertEqual(len(received), 2)
+        assert len(received) > 0
         client.disconnect()
 
     def test_messages_are_broadcasted(self):
@@ -60,10 +65,10 @@ class TestChatSockets(unittest.TestCase):
         client2.get_received()
 
         client1.emit('chat_message', { 'msg': "test message" })
-        received1 = client1.get_received()
-        received2 = client2.get_received()
-        self.assertEqual(received1[0]['args'][0]['msg'], "test message")
-        self.assertEqual(received2[0]['args'][0]['msg'], "test message")
+        received1 = self.get_relevant('chat_message', client1.get_received())
+        received2 = self.get_relevant('chat_message', client2.get_received())
+        self.assertEqual(received1['args'][0]['msg'], "test message")
+        self.assertEqual(received2['args'][0]['msg'], "test message")
 
         client1.disconnect()
         client2.disconnect()
@@ -72,8 +77,9 @@ class TestChatSockets(unittest.TestCase):
         client = socketio.test_client(app)
 
         received = client.get_received()
+        active_users_msg = self.get_relevant('active_users', received)
 
-        self.assertEqual(received[1]['name'], 'active_users')
+        assert len(active_users_msg) > 0
         client.disconnect()
 
     def test_asssigned_usernames_are_unique(self):
@@ -81,7 +87,8 @@ class TestChatSockets(unittest.TestCase):
         for i in range(5):
             client = socketio.test_client(app)
             received = client.get_received()
-            names.add(received[0]['args'][0])
+            user_joined_msg = self.get_relevant('user_joined', received)
+            names.add(user_joined_msg['args'][0])
             session = socketio.server.environ[client.sid]['saved_session']
             client.disconnect()
             session['uid'] = None
@@ -93,17 +100,19 @@ class TestChatSockets(unittest.TestCase):
         client2 = socketio.test_client(app)
 
         received = client1.get_received()
-        self.assertEqual(received[0]['name'], 'user_joined')
+        user_joined_msg = self.get_relevant('user_joined', received)
+        assert len(user_joined_msg) > 0
 
         client1.disconnect()
         client2.disconnect()
 
-    def chat_loads_with_recent_messages(self):
+    def test_chat_loads_with_recent_messages(self):
         client1 = socketio.test_client(app)
         client1.emit('chat_message', {'msg': 'Hello Room'})
         client2 = socketio.test_client(app)
         received = client2.get_received()
-        self.assertEqual(received[0]['name'], 'recent_messages')
+        recent_messages_msg = self.get_relevant('recent_messages', received)
+        self.assertEqual(recent_messages_msg['name'], 'recent_messages')
 
 
 class TestRedisDB(unittest.TestCase):
