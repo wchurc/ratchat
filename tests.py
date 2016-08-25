@@ -98,7 +98,7 @@ class TestChatSockets(unittest.TestCase):
         client1.disconnect()
         client2.disconnect()
 
-    def test_chat_loads_with_recent_messages(self):
+    def chat_loads_with_recent_messages(self):
         client1 = socketio.test_client(app)
         client1.emit('chat_message', {'msg': 'Hello Room'})
         client2 = socketio.test_client(app)
@@ -132,4 +132,15 @@ class TestRedisDB(unittest.TestCase):
 
     def test_testing_db_gets_cleaned(self):
         self.assertFalse(redis_db.get('foo'))
+
+    def test_db_logs_messages(self):
+        client = socketio.test_client(app)
+        client.emit('chat_message', {'msg': 'Are you logging?'})
+        db_msgs = redis_db.zrange('messages:global', 0, 10)
+        assert len(db_msgs) == 1
+        message_id = db_msgs[0].decode()
+        msg_content = redis_db.hget('message:' + message_id, 'msg').decode()
+        self.assertEqual(msg_content, 'Are you logging?')
+        client.disconnect()
+
 
