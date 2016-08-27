@@ -33,4 +33,19 @@ class TestChat(unittest.TestCase):
             name = elem.text.split(':')[0]
             assert name in active_users
 
+    def test_chat_commands(self):
+        pass
+        # Reggie saw a message from the server that showed him how
+        # to see a list of commands he could use
 
+        # Reggie decides to create a new unique username
+
+    def test_rooms(self):
+        pass
+        # Reggie creates a new chat room
+
+        # Reggie sees that he is the only person in the room
+
+        # Reggie invites a friend to join him in the room
+
+        # 
