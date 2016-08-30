@@ -96,7 +96,7 @@ class TestChatSockets(SocketTestCase):
             names.add(user_joined_msg['args'][0])
             session = socketio.server.environ[client.sid]['saved_session']
             client.disconnect()
-            session['uid'] = None
+            session['sid'] = None
         self.assertEqual(len(names), 5)
 
     def test_broadcast_message_when_user_joins(self):
@@ -125,9 +125,9 @@ class TestChatRooms(SocketTestCase):
     def test_personal_room_assigned_on_login(self):
         client = socketio.test_client(app)
         received = client.get_received()
-        uid_message = self.get_relevant('testing_uid', received)
-        uid = uid_message['args'][0]['uid']
-        socketio.emit('test_emission', {}, room=uid)
+        sid_message = self.get_relevant('testing_sid', received)
+        sid = sid_message['args'][0]['sid']
+        socketio.emit('test_emission', {}, room=sid)
         received = client.get_received()
         client.disconnect()
         assert self.get_relevant('test_emission', received) is not None

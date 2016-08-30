@@ -1,6 +1,6 @@
 used_names = {
-    'Reggie Chode': None,
-    'Mo Dick': None
+    'Reggie_Chode': None,
+    'Mo_Dick': None
 }
 
 

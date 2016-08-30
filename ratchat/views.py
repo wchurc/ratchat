@@ -5,12 +5,13 @@ import time
 
 from ratchat import app, redis_db, socketio
 from ratchat.name_generator import get_name
+from command_parser import execute_command, InvalidCommandError
 
 
 @app.route('/')
 def main():
-    if not session.get('uid'):
-        session['uid'] = uuid.uuid4().hex
+    if not session.get('sid'):
+        session['sid'] = uuid.uuid4().hex
     return render_template('index.html')
 
 
@@ -28,38 +29,71 @@ def send_recent_messages():
 
 
 def send_active_users():
-    data = [name.decode() for name in redis_db.hvals('temp_names')]
+    data = [name.decode() for name in redis_db.smembers('active_users')]
     emit('active_users', data)
+
+
+def create_username(sid, name=None, password=None, registered=False,
+                    active=True):
+    if name is None:
+        name = get_name()
+    if redis_db.exists(name):
+        raise Exception('Name is in use') # Change this to custom exc.
+    redis_db.hmset(name, {'sid': sid,
+                          'password': password,
+                          'registered': registered})
+    redis_db.set(sid, name)
+    if active:
+        redis_db.sadd('active_users', name)
+    return name
+
 
 
 @socketio.on('connect')
 def handle_connection():
     send_recent_messages()
+    
+    # Assign sid if doesn't exist
+    if session.get('sid') is None:
+        session['sid'] = uuid.uuid4().hex
+    else:
+        # Cancel db expirations <<<<<<<<<<<<<<<<<<<<<<<<<<
+        # And set active
+        pass
+    
+    sid = session.get('sid')
 
-    uid = session.get('uid')
-
-    if uid is None:
-        session['uid'] = uuid.uuid4().hex
-        uid = session.get('uid')
-
-    if redis_db.hget('temp_names', uid) is None:
-        name = get_name()
-        redis_db.hset('temp_names', uid, name)
-        joining_user = name
-        emit('user_joined', joining_user, broadcast=True)
+    if redis_db.get(sid) is None:
+        try:
+            name = create_username(sid)
+        except Exception as e:
+            print(e)
+            return
+        else:
+            emit('user_joined', name, broadcast=True)
+    
     send_active_users()
-    join_room(uid)
-    emit('testing_uid', {'uid': uid})
+    join_room(sid)
+    emit('testing_sid', {'sid': sid})
 
 
 @socketio.on('chat_message')
 def handle_chat_message(message):
-    uid = session['uid']
-    username = redis_db.hget('temp_names', uid).decode()
-    message['username'] = username
-    emit('chat_message', message, broadcast=True)
+    sid = session['sid']
+    if message['msg'][0] == '/':
+        try:
+            execute_command(message['msg'])
+        except InvalidCommandError:
+            emit('chat_message', 
+                {'msg': 'Invalid command. Type "/help" for list of commands',
+                'username': 'server'},
+                room=sid)
 
-    msg_id = uuid.uuid4().hex
-    redis_db.zadd('messages:global', time.time(), msg_id)
-    redis_db.hmset('message:' + msg_id, message)
+    else:
+        message['username'] = redis_db.get(sid).decode()
+        emit('chat_message', message, broadcast=True)
+
+        msg_id = uuid.uuid4().hex
+        redis_db.zadd('messages:global', time.time(), msg_id)
+        redis_db.hmset('message:' + msg_id, message)
 

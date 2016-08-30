@@ -26,7 +26,6 @@ $(document).ready( function() {
 
   socket.on('chat_message', function(data) {
     update_chat(data['username'] + ": " + data['msg']);
-    $('#chat_input').val('').focus();
   });
 
     
@@ -56,6 +55,7 @@ $(document).ready( function() {
         socket.emit('chat_message', { 
           'msg': escape($('#chat_input').val()),
         });
+        $('#chat_input').val('').focus();
       }
   });
 

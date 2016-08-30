@@ -1,5 +1,5 @@
-from flask_socketio import emit, join
-from ratchat import app, socketio
+from flask_socketio import emit, join_room
+from ratchat import app, redis_db, socketio
 
 
 command_examples = \
@@ -11,8 +11,15 @@ command_examples = \
     '/invite username'
 
 
-def msg(receiver, *message):
-    message = ' '.join(message)
+def private_message(receiver, *message):
+   """ 
+    msg = ' '.join(message)
+    data = {'sender': ,
+            'receiver': receiver_name,
+            'msg': msg}
+    emit('private_message', data, room=receiver_id)
+    """
+   pass
 
 
 
@@ -37,7 +44,7 @@ def invite_to_room(username):
 
 
 command_dict = {
-    '/msg': msg,
+    '/msg': private_message,
     '/login': login,
     '/register': register,
     '/join': join_room,
