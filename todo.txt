@@ -1,3 +1,5 @@
+fix tests so they use fakeredis
+add background thread to send active users
 command parser
 clean up views/tests with request context?
 move all sanitizing to server
