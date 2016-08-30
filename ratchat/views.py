@@ -1,7 +1,7 @@
 from flask import render_template, request, session
-from flask_socketio import emit, send
-import time
+from flask_socketio import emit, join_room, send
 import uuid
+import time
 
 from ratchat import app, redis_db, socketio
 from ratchat.name_generator import get_name
@@ -25,8 +25,6 @@ def send_recent_messages():
                    for key, value in bytes_message.items() }
         message_list.append(message)
     emit('recent_messages', message_list)
-    for message in message_list:
-        print(message)
 
 
 def send_active_users():
@@ -49,8 +47,9 @@ def handle_connection():
         redis_db.hset('temp_names', uid, name)
         joining_user = name
         emit('user_joined', joining_user, broadcast=True)
-
     send_active_users()
+    join_room(uid)
+    emit('testing_uid', {'uid': uid})
 
 
 @socketio.on('chat_message')
@@ -63,3 +62,4 @@ def handle_chat_message(message):
     msg_id = uuid.uuid4().hex
     redis_db.zadd('messages:global', time.time(), msg_id)
     redis_db.hmset('message:' + msg_id, message)
+

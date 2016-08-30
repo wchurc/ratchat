@@ -1,11 +1,35 @@
 import time
 import unittest
 from urllib.request import urlopen
-from flask import Flask
+from flask import Flask, session
 from fakeredis import FakeStrictRedis
 
 from ratchat import app, socketio, redis_db
 from utils import noisy_print, create_db
+
+
+
+class SocketTestCase(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        pass
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
+    def setUp(self):
+        redis_db.flushall()
+
+    def tearDown(self):
+        redis_db.flushall()
+
+    def get_relevant(self, string, received):
+        for x in received:
+            if x.get('name') == string:
+                return x
+
 
 
 class TestChatHTTP(unittest.TestCase):
@@ -31,26 +55,7 @@ class TestChatHTTP(unittest.TestCase):
 
 
 
-class TestChatSockets(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        pass
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
-    def setUp(self):
-        redis_db.flushall()
-
-    def tearDown(self):
-        redis_db.flushall()
-
-    def get_relevant(self, string, received):
-        for x in received:
-            if x.get('name') == string:
-                return x
+class TestChatSockets(SocketTestCase):
 
     def test_connect(self):
         client = socketio.test_client(app)
@@ -101,7 +106,7 @@ class TestChatSockets(unittest.TestCase):
 
         received = client1.get_received()
         user_joined_msg = self.get_relevant('user_joined', received)
-        assert len(user_joined_msg) > 0
+        assert user_joined_msg is not None
 
         client1.disconnect()
         client2.disconnect()
@@ -113,6 +118,46 @@ class TestChatSockets(unittest.TestCase):
         received = client2.get_received()
         recent_messages_msg = self.get_relevant('recent_messages', received)
         self.assertEqual(recent_messages_msg['name'], 'recent_messages')
+
+
+class TestChatRooms(SocketTestCase):
+
+    def test_personal_room_assigned_on_login(self):
+        client = socketio.test_client(app)
+        received = client.get_received()
+        uid_message = self.get_relevant('testing_uid', received)
+        uid = uid_message['args'][0]['uid']
+        socketio.emit('test_emission', {}, room=uid)
+        received = client.get_received()
+        client.disconnect()
+        assert self.get_relevant('test_emission', received) is not None
+
+    def test_private_message(self):
+        client1 = socketio.test_client(app)
+        client1.get_received()
+        client2 = socketio.test_client(app)
+        
+        received1 = client1.get_received()
+        user_joined_msg = self.get_relevant('user_joined', received1)
+        client2_name = user_joined_msg['args'][0]
+
+        client2.get_received()
+        client1.emit('chat_message', {'msg': '/msg ' 
+                                      + client2_name 
+                                      + ' Hello there'})
+        received = client2.get_received()
+
+        client1.disconnect()
+        client2.disconnect()
+
+        assert self.get_relevant('private_message', received) is not None
+
+
+    def test_join_room(self):
+        pass
+
+    def test_create_room(self):
+        pass
 
 
 class TestRedisDB(unittest.TestCase):

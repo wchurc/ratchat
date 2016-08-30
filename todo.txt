@@ -1,6 +1,6 @@
-functional tests
-bootstrap for mobile friendliness
 command parser
+clean up views/tests with request context?
+move all sanitizing to server
 rooms
 logins
 cyberfy

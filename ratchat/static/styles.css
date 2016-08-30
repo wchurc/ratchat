@@ -1,12 +1,25 @@
+html,body,.container {
+	height:100%
+}
+
 .container {
   width: 80%;
   height: 80%;
   margin: 0 auto;
 }
 
+.container-full {
+	margin: 0 auto;
+	width: 100%;
+}
+
+.row {
+	height: 100%;
+}
+
 #chat_users {
   border: 1px solid powderblue;
-  width: 19%;
+  width: 20%;
   height: 100%;
   overflow: auto;
   float: right;
@@ -14,7 +27,7 @@
 
 #chat_window {
     border: 1px solid powderblue;
-    width: 80%;
+    width: 79%;
     height: 100%;
     overflow: auto;
     float: left;
@@ -23,16 +36,24 @@
 #input_form {
     width: 100%;
     margin: 0 auto;
+		padding: 0;
 }
 
 #chat_input {
     width: 90%;
+		float: left;
+		padding: 0;
+		margin: 0;
 }
 
 #chat_button {
-    width: 10%;
+    width: 9%;
+		float: right;
+		padding: 0;
+		margin: 0;
 }
 
 p {
+
   margin: 0
 }
