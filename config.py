@@ -4,5 +4,5 @@ development_cfg = {
     #'DB_PASSWORD' : 'PASSWD',
     'DEBUG' : True,
     'SECRET_KEY' : 'real secret',
-    'TESTING' : True
+    'TESTING' : False 
 }

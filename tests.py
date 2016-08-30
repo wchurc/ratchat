@@ -7,13 +7,13 @@ from fakeredis import FakeStrictRedis
 from ratchat import app, socketio, redis_db
 from utils import noisy_print, create_db
 
-
+app.config['TESTING'] = True
 
 class SocketTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        pass
+        pass 
 
     @classmethod
     def tearDownClass(cls):

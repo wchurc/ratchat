@@ -48,21 +48,26 @@ def create_username(sid, name=None, password=None, registered=False,
     return name
 
 
+def unexpire(sid):
+    redis_db.persist(sid)
+    name = redis_db.get(sid).decode()
+    redis_db.persist(name)
+    redis_db.sadd('active_users', name)
+
 
 @socketio.on('connect')
 def handle_connection():
     send_recent_messages()
     
-    # Assign sid if doesn't exist
-    if session.get('sid') is None:
-        session['sid'] = uuid.uuid4().hex
-    else:
-        # Cancel db expirations <<<<<<<<<<<<<<<<<<<<<<<<<<
-        # And set active
-        pass
-    
     sid = session.get('sid')
 
+    if sid is None:
+        session['sid'] = uuid.uuid4().hex
+        sid = session.get('sid')
+    else:
+        if redis_db.exists(sid):
+            unexpire(sid)
+    
     if redis_db.get(sid) is None:
         try:
             name = create_username(sid)
@@ -75,6 +80,18 @@ def handle_connection():
     send_active_users()
     join_room(sid)
     emit('testing_sid', {'sid': sid})
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    sid = session.get('sid')
+    name = redis_db.get(sid)
+    redis_db.srem('active_users', name)
+
+    redis_db.expire(sid, 10)
+ 
+    if redis_db.hget(name, 'registered') == b'False':
+        redis_db.expire(name, 10)
 
 
 @socketio.on('chat_message')
