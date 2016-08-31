@@ -1,7 +1,6 @@
 from flask_socketio import emit, join_room
 from ratchat import app, redis_db, socketio
 
-
 command_examples = \
     '/msg otheruser message\n' \
     '/login username password\n'\

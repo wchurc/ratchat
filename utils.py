@@ -1,8 +1,9 @@
 import redis
-from ratchat import app
 from fakeredis import FakeStrictRedis
+from ratchat import app
 
 def create_db():
+
     if app.config['TESTING']:
         db = FakeStrictRedis()
 

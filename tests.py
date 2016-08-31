@@ -1,13 +1,21 @@
 import time
 import unittest
+import os
 from urllib.request import urlopen
+
 from flask import Flask, session
 from fakeredis import FakeStrictRedis
 
-from ratchat import app, socketio, redis_db
-from utils import noisy_print, create_db
+print('Setting environ. Currently: ', os.environ.get('RATCHAT_TESTING'))
+os.environ['RATCHAT_TESTING'] = 'True'
+print('Set environ. Now: ', os.environ.get('RATCHAT_TESTING'))
 
-app.config['TESTING'] = True
+from ratchat import app, redis_db, socketio
+from utils import noisy_print
+
+
+print("In tests.py using", type(redis_db))
+
 
 class SocketTestCase(unittest.TestCase):
 

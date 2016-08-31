@@ -3,10 +3,11 @@ from flask_socketio import emit, join_room, send
 import uuid
 import time
 
-from ratchat import app, redis_db, socketio
+from ratchat import app, socketio, redis_db
 from ratchat.name_generator import get_name
 from command_parser import execute_command, InvalidCommandError
 
+print("In views.py using ", type(redis_db))
 
 @app.route('/')
 def main():
