@@ -28,7 +28,13 @@ $(document).ready( function() {
     update_chat(data['username'] + ": " + data['msg']);
   });
 
-    
+
+  socket.on('private_message', function(data) {
+    update_chat('Private message to ' + data['receiver'] + ' from ' + data['sender'] + ':');
+    update_chat(data['msg']);
+  });
+
+
   socket.on('user_joined', function(joining_user) {
     update_chat(joining_user + " has joined the chat");
     if ( $("#" + joining_user.replace(/ /g,'')).length == 0 ) {

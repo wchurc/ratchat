@@ -5,6 +5,7 @@ import time
 
 from ratchat import app, socketio, redis_db
 from ratchat.name_generator import get_name
+from ratchat.exceptions import InvalidNameError
 from command_parser import execute_command, InvalidCommandError
 
 print("In views.py using ", type(redis_db))
@@ -36,10 +37,13 @@ def send_active_users():
 
 def create_username(sid, name=None, password=None, registered=False,
                     active=True):
-    if name is None:
+    while name is None:
         name = get_name()
+        if not redis_db.exists(name):
+            break
+
     if redis_db.exists(name):
-        raise Exception('Name is in use') # Change this to custom exc.
+        raise InvalidNameError('Name is in use') # Change this to custom exc.
     redis_db.hmset(name, {'sid': sid,
                           'password': password,
                           'registered': registered})
@@ -100,8 +104,9 @@ def handle_chat_message(message):
     sid = session['sid']
     if message['msg'][0] == '/':
         try:
-            execute_command(message['msg'])
-        except InvalidCommandError:
+            execute_command(sid, message['msg'])
+        except InvalidCommandError as e:
+            print(e.args)
             emit('chat_message', 
                 {'msg': 'Invalid command. Type "/help" for list of commands',
                 'username': 'server'},

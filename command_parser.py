@@ -10,16 +10,26 @@ command_examples = \
     '/invite username'
 
 
-def private_message(receiver, *message):
-   """ 
+def private_message(sender_sid, receiver, *message):    
     msg = ' '.join(message)
-    data = {'sender': ,
-            'receiver': receiver_name,
-            'msg': msg}
-    emit('private_message', data, room=receiver_id)
-    """
-   pass
-
+    
+    try:
+        sender_name = redis_db.get(sender_sid).decode()
+        receiver_sid = redis_db.hget(receiver, 'sid').decode()
+        if sender_name is None:
+            raise Exception('Sender name not found in the database.')
+        if receiver_sid is None:
+            raise Exception('Recipient sid not found in the database.')
+    
+    except Exception as e:
+        raise InvalidCommandError(e.args)
+    
+    else:    
+        data = {'sender': sender_name,
+                'receiver': receiver,
+                'msg': msg}
+        emit('private_message', data, room=receiver_sid)
+        emit('private_message', data, room=sender_sid)
 
 
 def login(username, password):
@@ -56,15 +66,17 @@ class InvalidCommandError(Exception):
     pass
 
 
-def execute_command(command_string):
+def execute_command(sid, command_string):
     chunks = [x.strip() for x in command_string.split(' ') if x]
+    print(chunks)
     command = chunks[0]
     args = chunks[1:]
     if command not in command_dict:
         raise InvalidCommandError
     else:
         try:
-            command_dict[command](*args)
-        except:
-            raise InvalidCommandError
+            command_dict[command](sid, *args)
+        except Exception as e:
+            print(e.args)
+            raise InvalidCommandError(e.args)
 
