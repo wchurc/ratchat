@@ -11,7 +11,7 @@ os.environ['RATCHAT_TESTING'] = 'True'
 print('Set environ. Now: ', os.environ.get('RATCHAT_TESTING'))
 
 from ratchat import app, redis_db, socketio
-from utils import noisy_print
+from ratchat.utils import noisy_print
 
 
 print("In tests.py using", type(redis_db))
@@ -139,26 +139,6 @@ class TestChatRooms(SocketTestCase):
         received = client.get_received()
         client.disconnect()
         assert self.get_relevant('test_emission', received) is not None
-
-    def test_private_message(self):
-        client1 = socketio.test_client(app)
-        client1.get_received()
-        client2 = socketio.test_client(app)
-        
-        received1 = client1.get_received()
-        user_joined_msg = self.get_relevant('user_joined', received1)
-        client2_name = user_joined_msg['args'][0]
-
-        client2.get_received()
-        client1.emit('chat_message', {'msg': '/msg ' 
-                                      + client2_name 
-                                      + ' Hello there'})
-        received = client2.get_received()
-
-        client1.disconnect()
-        client2.disconnect()
-
-        assert self.get_relevant('private_message', received) is not None
 
 
     def test_join_room(self):

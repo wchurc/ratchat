@@ -1,14 +1,26 @@
 from flask import Flask
 from flask_socketio import SocketIO
+import fakeredis
+import redis
 
-from config import development_cfg
+from ratchat.config import development_cfg
 
 
 app = Flask(__name__)
 socketio = SocketIO(app)
 app.config.update(development_cfg)
 
-from utils import create_db
+def create_db():
+
+    if app.config['TESTING']:
+        db = fakeredis.FakeStrictRedis()
+
+    else:
+        db = redis.StrictRedis(host=app.config['DB_HOST'],
+                               port=app.config['DB_PORT'],
+                               #password=app.config['DB_PASSWORD']
+                              )
+    return db
 
 redis_db = create_db()
 

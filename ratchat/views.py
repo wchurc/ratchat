@@ -5,59 +5,17 @@ import time
 
 from ratchat import app, socketio, redis_db
 from ratchat.name_generator import get_name
-from ratchat.exceptions import InvalidNameError
-from command_parser import execute_command, InvalidCommandError
+from ratchat.exceptions import InvalidNameError, InvalidCommandError
+from ratchat.command_parser import execute_command
+from ratchat.utils import send_recent_messages, send_active_users, \
+                          create_username, unexpire 
 
-print("In views.py using ", type(redis_db))
 
 @app.route('/')
 def main():
     if not session.get('sid'):
         session['sid'] = uuid.uuid4().hex
     return render_template('index.html')
-
-
-def send_recent_messages():
-    recent_message_ids = redis_db.zrange('messages:global', 0, 100, desc=True)
-    recent_message_ids.reverse()
-    message_list = []
-    for message_id in recent_message_ids:
-        message = {}
-        bytes_message = redis_db.hgetall(b'message:' + message_id)
-        message = { key.decode() : value.decode() \
-                   for key, value in bytes_message.items() }
-        message_list.append(message)
-    emit('recent_messages', message_list)
-
-
-def send_active_users():
-    data = [name.decode() for name in redis_db.smembers('active_users')]
-    emit('active_users', data)
-
-
-def create_username(sid, name=None, password=None, registered=False,
-                    active=True):
-    while name is None:
-        name = get_name()
-        if not redis_db.exists(name):
-            break
-
-    if redis_db.exists(name):
-        raise InvalidNameError('Name is in use') # Change this to custom exc.
-    redis_db.hmset(name, {'sid': sid,
-                          'password': password,
-                          'registered': registered})
-    redis_db.set(sid, name)
-    if active:
-        redis_db.sadd('active_users', name)
-    return name
-
-
-def unexpire(sid):
-    redis_db.persist(sid)
-    name = redis_db.get(sid).decode()
-    redis_db.persist(name)
-    redis_db.sadd('active_users', name)
 
 
 @socketio.on('connect')

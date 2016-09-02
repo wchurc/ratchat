@@ -1,5 +1,6 @@
 from flask_socketio import emit, join_room
 from ratchat import app, redis_db, socketio
+from ratchat.exceptions import InvalidCommandError
 
 command_examples = \
     '/msg otheruser message\n' \
@@ -14,8 +15,8 @@ def private_message(sender_sid, receiver, *message):
     msg = ' '.join(message)
     
     try:
-        sender_name = redis_db.get(sender_sid).decode()
-        receiver_sid = redis_db.hget(receiver, 'sid').decode()
+        sender_name = redis_db.get(sender_sid)
+        receiver_sid = redis_db.hget(receiver, 'sid')
         if sender_name is None:
             raise Exception('Sender name not found in the database.')
         if receiver_sid is None:
@@ -25,30 +26,52 @@ def private_message(sender_sid, receiver, *message):
         raise InvalidCommandError(e.args)
     
     else:    
-        data = {'sender': sender_name,
+        data = {'sender': sender_name.decode(),
                 'receiver': receiver,
                 'msg': msg}
         emit('private_message', data, room=receiver_sid)
         emit('private_message', data, room=sender_sid)
 
 
-def login(username, password):
+def login(sid, username, password=None):
+    # RETHINK THIS
+    
+    name_exists = redis_db.exists(username)
+    
+    if name_exists and password is None:
+        raise Exception('Username is taken, must enter password')
+    
+    if name_exists and password is not None:
+        if redis_db.hget(username, 'password') != pasword:
+            raise Exception('Password is incorrect')
+    
+    current_name = redis_db.get(sid).decode()
+    
+
+    # Update database 
+
+    # Emit confirmation and update chat room
+    
     pass
 
 
-def register(username, password):
+def login_existing():
     pass
 
 
-def join_room(room):
+def register(sid, username, password):
     pass
 
 
-def create_room(room):
+def join_room(sid, room):
     pass
 
 
-def invite_to_room(username):
+def create_room(sid, room):
+    pass
+
+
+def invite_to_room(sid, username):
     pass
 
 
@@ -62,13 +85,8 @@ command_dict = {
 }
 
 
-class InvalidCommandError(Exception):
-    pass
-
-
 def execute_command(sid, command_string):
     chunks = [x.strip() for x in command_string.split(' ') if x]
-    print(chunks)
     command = chunks[0]
     args = chunks[1:]
     if command not in command_dict:
