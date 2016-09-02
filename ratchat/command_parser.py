@@ -1,6 +1,8 @@
 from flask_socketio import emit, join_room
 from ratchat import app, redis_db, socketio
 from ratchat.exceptions import InvalidCommandError
+from ratchat.utils import create_username
+
 
 command_examples = \
     '/msg otheruser message\n' \
@@ -44,15 +46,22 @@ def login(sid, username, password=None):
     if name_exists and password is not None:
         if redis_db.hget(username, 'password') != pasword:
             raise Exception('Password is incorrect')
+        print("LOGIN NOT IMPLEMENTED YET")
     
     current_name = redis_db.get(sid).decode()
     
+    # Try to create new temp username
+    try:
+        create_username(sid, name=username)
+    except Exception as e:
+        raise InvalidCommandError(e.args)
+    else:
+        if redis_db.hget(current_name, 'registered') == b'False':
+            redis_db.delete(current_name)
+            redis_db.srem('active_users', current_name)
 
-    # Update database 
 
     # Emit confirmation and update chat room
-    
-    pass
 
 
 def login_existing():
