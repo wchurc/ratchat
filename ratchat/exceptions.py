@@ -3,3 +3,6 @@ class InvalidNameError(Exception):
 
 class InvalidCommandError(Exception):
     pass
+
+class InvalidPasswordError(Exception):
+    pass

@@ -52,9 +52,9 @@ class TestChat(unittest.TestCase):
         # Reggie saw a message from the server that showed him how
         # to see a list of commands he could use
 
-        # Reggie decides to create a new unique username
+        # Reggie decides to change his alias 
 
-        self.send_input('/login Reginald')
+        self.send_input('/callme Reginald')
         self.send_input("What's my name?")
         messages = self.get_message_list(filter_by="What's my name?")
         name = messages[-1].split(':')[0]

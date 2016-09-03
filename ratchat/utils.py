@@ -32,14 +32,12 @@ def create_username(sid, name=None, password=None, registered=False,
     if redis_db.exists(name):
         raise InvalidNameError('Name is in use') # Change this to custom exc?
     
-    with redis_db.pipeline() as pipe:
-        redis_db.hmset(name, {'sid': sid,
-                              'password': password,
-                              'registered': registered})
-        redis_db.set(sid, name)
-        if active:
-            redis_db.sadd('active_users', name)
 
+    redis_db.hmset(name, {'sid': sid,
+                          'password': password,
+                          'registered': registered,
+                          'active': active})
+    redis_db.set(sid, name)
     return name
 
 

@@ -27,9 +27,9 @@ def handle_connection():
     if sid is None:
         session['sid'] = uuid.uuid4().hex
         sid = session.get('sid')
-    else:
-        if redis_db.exists(sid):
-            unexpire(sid)
+    
+    if redis_db.exists(sid):
+        unexpire(sid)
     
     if redis_db.get(sid) is None:
         try:
@@ -39,6 +39,8 @@ def handle_connection():
             return
         else:
             emit('user_joined', name, broadcast=True)
+        finally:
+            assert redis_db.get(sid) is not None
     
     send_active_users()
     join_room(sid)
@@ -55,6 +57,7 @@ def handle_disconnect():
  
     if redis_db.hget(name, 'registered') == b'False':
         redis_db.expire(name, 10)
+    print("Got Disconnect: {} {}".format(name, sid))
 
 
 @socketio.on('chat_message')
