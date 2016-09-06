@@ -1,9 +1,10 @@
+remove redundancy with active users set and active users key in name hashes
 implement login for registered users
 unit tests for commands
 emit messages at successful name change/login
+rooms
 add background thread to send active users?
 clean up views/tests with request context?
 move all sanitizing to server
-rooms
 logins
 cyberfy

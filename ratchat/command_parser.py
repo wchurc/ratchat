@@ -14,7 +14,16 @@ command_examples = \
     '/invite username'
 
 
-def private_message(sender_sid, receiver, *message):    
+def private_message(sender_sid, receiver, *message):
+    """Sends a private message to the receiver if receiver is currently
+    active."""
+    
+    if redis_db.sismember('active_users', receiver) is False:
+        emit('chat_message', 
+             {'username': 'server',
+              'msg': "{} is not currently active".format(receiver)})
+        return
+    
     msg = ' '.join(message)
     
     try:
@@ -40,7 +49,9 @@ def private_message(sender_sid, receiver, *message):
         emit('private_message', data, room=sender_sid)
 
 
-def set_temp_name(sid, username):    
+def set_temp_name(sid, username):
+    """Associates sid with a new temporary username if it's available."""
+
     name_exists = redis_db.exists(username)
     
     if name_exists:
@@ -57,7 +68,7 @@ def set_temp_name(sid, username):
     except Exception as e:
         raise InvalidCommandError(e.args)
     else:
-        # Delete old name if it was temporary
+        # CLean up and delete old name if it was temporary
         if redis_db.hget(current_name, 'registered') == b'False':
             redis_db.delete(current_name)
         redis_db.srem('active_users', current_name)
@@ -69,20 +80,35 @@ def set_temp_name(sid, username):
 
 
 def login(sid, username, password=None):
+    """ Log in as a registered user. If username does not exist
+    it will be created."""
+    
+    if redis_db.sismember('active_users', username):
+        emit('chat_message',
+             {'msg': '{} is already logged in'.format(username),
+              'username': 'server'})
+        return
+
     if password is None:
         raise InvalidPasswordError('Password is required')
+
+    current_name = redis_db.get(sid).decode()
+
     try:
-        if not redis_db.exists(username):
+        if redis_db.exists(username) is False:
             create_username(sid, name=username, password=password, 
                             registered=True)
-        else:
-            current_name = redis_db.get(sid).decode()
+        else:        
             if password == redis_db.hget(username, 'password').decode():
                 with redis_db.pipeline() as pipe:
-                    redis_db.hset(username, 'sid', sid)
-                    redis_db.set(sid, username)
-                    redis_db.srem('active_users', current_name)
-                    redis_db.sadd('active_users', username)
+                    pipe.hmset(username, {'sid', sid, 'active', True})
+                    pipe.set(sid, username)
+                    pipe.srem('active_users', current_name)
+                    if redis_db.hget(current_name, 'registered') == b'False':
+                        pipe.delete(current_name)
+                    else:
+                        pipe.hset(current_name, 'active', False)
+                    pipe.execute()
 
             else:
                 raise InvalidPasswordError('Password is incorrect')
@@ -93,17 +119,13 @@ def login(sid, username, password=None):
              {'username': 'server',
               'msg': 'Login failed: ' + e.args[0]})
     else:
-         emit('chat_message', 
+        if redis_db.hget(current_name, 'registered') == b'False':
+            redis_db.delete(current_name)
+        redis_db.srem('active_users', current_name)
+        
+        emit('chat_message', 
              {'username': 'server',
               'msg': 'Login Successful'})
-
-def authorized_login(sid, name):
-    pass
-        
-
-
-def register(sid, username, password):
-    pass
 
 
 def join_room(sid, room):
@@ -122,7 +144,6 @@ command_dict = {
     '/msg': private_message,
     '/login': login,
     '/callme': set_temp_name,
-    '/register': register,
     '/join': join_room,
     '/create': create_room,
     '/invite': invite_to_room
