@@ -49,8 +49,7 @@ def create_username(sid, name=None, password=None, registered=False,
 
     redis_db.hmset(name, {'sid': sid,
                           'password': password,
-                          'registered': registered,
-                          'active': active})
+                          'registered': registered})
     redis_db.set(sid, name)
     redis_db.sadd('active_users', name)
     return name

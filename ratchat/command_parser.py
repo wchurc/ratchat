@@ -101,7 +101,7 @@ def login(sid, username, password=None):
         else:        
             if password == redis_db.hget(username, 'password').decode():
                 with redis_db.pipeline() as pipe:
-                    pipe.hmset(username, {'sid', sid, 'active', True})
+                    pipe.hmset(username, {'sid': sid, 'active': True})
                     pipe.set(sid, username)
                     pipe.srem('active_users', current_name)
                     if redis_db.hget(current_name, 'registered') == b'False':
