@@ -1,16 +1,16 @@
-used_names = {
-    'Reggie_Chode': None,
-    'Mo_Dick': None
-}
+default_names = {'Reggie_Chode', 'Mo_Dick'}
 
 
 def name_gen():
-    """Yields a name from the used_names dict. Will append a unique 
-    incremental # if the name has already been used."""
+    """
+    Yields a name from the used_names dict. Will append a unique 
+    incremental # if the name has already been used.
+    """
+    inc = 0
     while True:
-        for name in used_names.keys():
-            yield name + str(used_names[name]) if used_names[name] else name
-            used_names[name] = used_names[name] + 1 if used_names[name] else 1
+        for name in default_names:
+            yield name + str(inc) if inc else name
+        inc += 1
 
 
 ng = name_gen()

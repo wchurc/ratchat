@@ -5,8 +5,10 @@ from flask_socketio import emit, join_room, send
 
 
 def send_recent_messages(count=100):
-    """Used on a new connection to send the 'count' most recent chat messages
-    to the connected user."""
+    """
+    Used on a new connection to send the 'count' most recent chat messages
+    to the connected user.
+    """
     
     recent_message_ids = redis_db.zrange('messages:global', 0, count, desc=True)
     recent_message_ids.reverse()
@@ -21,7 +23,9 @@ def send_recent_messages(count=100):
 
 
 def send_active_users():
-    """Sends a list of names in the 'active_users' set."""
+    """
+    Sends a list of names in the 'active_users' set.
+    """
 
     data = [name.decode() for name in redis_db.smembers('active_users')]
     emit('active_users', data)
@@ -29,8 +33,10 @@ def send_active_users():
 
 def create_username(sid, name=None, password=None, registered=False,
                     active=True):
-    """Creates a new unique name for the given sid. Will use get_name 
-    if no name is provided."""
+    """
+    Creates a new unique name for the given sid. Will use get_name 
+    if no name is provided.
+    """
 
     while name is None:
         name = get_name()
@@ -51,8 +57,10 @@ def create_username(sid, name=None, password=None, registered=False,
 
 
 def unexpire(sid):
-    """Persists database keys and adds the name associated with the given sid
-    to the active_users set. Used to recover from unintentional disconnects."""
+    """
+    Persists database keys and adds the name associated with the given sid
+    to the active_users set. Used to recover from unintentional disconnects.
+    """
 
     redis_db.persist(sid)
     name = redis_db.get(sid).decode()
