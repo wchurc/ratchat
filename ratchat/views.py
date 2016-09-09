@@ -21,6 +21,8 @@ def main():
 @socketio.on('connect')
 def handle_connection():
     send_recent_messages()
+    emit('chat_message', {'msg': 'Type /help for a list of commands.',
+                          'username': 'server'})
     
     sid = session.get('sid')
 
@@ -42,7 +44,7 @@ def handle_connection():
         finally:
             assert redis_db.get(sid) is not None
     
-    send_active_users()
+    send_active_users(broadcast=True)
     join_room(sid)
     emit('testing_sid', {'sid': sid})
 
@@ -58,6 +60,7 @@ def handle_disconnect():
     if redis_db.hget(name, 'registered') == b'False':
         redis_db.expire(name, 10)
     print("Got Disconnect: {} {}".format(name, sid))
+    send_active_users(broadcast=True)
 
 
 @socketio.on('chat_message')

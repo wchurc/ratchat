@@ -1,7 +1,9 @@
-from ratchat import redis_db
-from ratchat.name_generator import get_name
-
 from flask_socketio import emit, join_room, send
+
+from ratchat import redis_db, socketio
+from ratchat.name_generator import get_name
+from ratchat.exceptions import InvalidNameError
+
 
 
 def send_recent_messages(count=100):
@@ -22,13 +24,14 @@ def send_recent_messages(count=100):
     emit('recent_messages', message_list)
 
 
-def send_active_users():
+def send_active_users(broadcast=False):
     """
     Sends a list of names in the 'active_users' set.
     """
 
     data = [name.decode() for name in redis_db.smembers('active_users')]
-    emit('active_users', data)
+    socketio.emit('active_users', data, broadcast=broadcast)
+    
 
 
 def create_username(sid, name=None, password=None, registered=False,

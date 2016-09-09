@@ -1,17 +1,7 @@
 from flask_socketio import emit, join_room
 from ratchat import app, redis_db, socketio
 from ratchat.exceptions import InvalidCommandError, InvalidPasswordError
-from ratchat.utils import create_username
-
-
-command_examples = \
-    '/msg otheruser message\n' \
-    '/login username password\n' \
-    '/callme username\n' \
-    '/register newuser password\n' \
-    '/join roomname\n' \
-    '/create roomname\n' \
-    '/invite username'
+from ratchat.utils import create_username, send_active_users
 
 
 def private_message(sender_sid, receiver, *message):
@@ -76,7 +66,8 @@ def set_temp_name(sid, username):
         emit('chat_message',
              {'msg': 'Successfully changed name from: {} to {}'
               .format(current_name, username),
-              'username': 'server'})   
+              'username': 'server'})
+        send_active_users(broadcast=True)
 
 
 def login(sid, username, password=None):
@@ -101,13 +92,8 @@ def login(sid, username, password=None):
         else:        
             if password == redis_db.hget(username, 'password').decode():
                 with redis_db.pipeline() as pipe:
-                    pipe.hmset(username, {'sid': sid, 'active': True})
+                    pipe.sadd('active_users', username)
                     pipe.set(sid, username)
-                    pipe.srem('active_users', current_name)
-                    if redis_db.hget(current_name, 'registered') == b'False':
-                        pipe.delete(current_name)
-                    else:
-                        pipe.hset(current_name, 'active', False)
                     pipe.execute()
 
             else:
@@ -126,6 +112,16 @@ def login(sid, username, password=None):
         emit('chat_message', 
              {'username': 'server',
               'msg': 'Login Successful'})
+        send_active_users(broadcast=True)
+
+
+def send_help_message(sid):
+    msg = "Try the following commands:<br>" \
+    '/msg otheruser message<br>' \
+    '/login username password<br>' \
+    '/callme username<br>' \
+    '/help<br>'
+    emit('chat_message', {'msg': msg, 'username': 'server'}, room=sid)
 
 
 def join_room(sid, room):
@@ -146,7 +142,8 @@ command_dict = {
     '/callme': set_temp_name,
     '/join': join_room,
     '/create': create_room,
-    '/invite': invite_to_room
+    '/invite': invite_to_room,
+    '/help': send_help_message
 }
 
 

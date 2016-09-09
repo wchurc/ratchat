@@ -37,19 +37,19 @@ $(document).ready( function() {
 
   socket.on('user_joined', function(joining_user) {
     update_chat(joining_user + " has joined the chat");
+    /*
     if ( $("#" + joining_user.replace(/ /g,'')).length == 0 ) {
       $('#chat_users').append('<p id="' + joining_user.replace(/ /g, '') + '">' + joining_user + "</p>");
     }
+    */
   });
 
 
   socket.on('active_users', function(data) {
     if (data.length) {
-      $('#chat_users').val('');
-      for (var i = 0; i < data.length; i++) {
-        if ($("#" + data[i].replace(/ /g,'')).length == 0) {
-          $('#chat_users').append('<p id="' + data[i].replace(/ /g,'') + '">' + data[i] + "</p>");
-        }
+      $('#chat_users').empty();
+      for (var i = 0; i < data.length; i++) { 
+          $('#chat_users').append('<p id="' + data[i] + '">' + data[i] + "</p>");
       }
     }
   });
