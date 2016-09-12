@@ -50,7 +50,7 @@ def handle_connection():
 
 
 @socketio.on('disconnect')
-def handle_disconnect():
+def handle_user_disconnect():
     sid = session.get('sid')
     name = redis_db.get(sid)
     redis_db.srem('active_users', name)

@@ -1,5 +1,3 @@
-remove redundancy with active users set and active users key in name hashes
-implement login for registered users
 unit tests for commands
 emit messages at successful name change/login
 rooms

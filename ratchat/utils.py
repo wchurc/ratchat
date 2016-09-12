@@ -42,13 +42,12 @@ def create_username(sid, name=None, password=None, registered=False,
     """
 
     while name is None:
-        name = get_name()
-        if not redis_db.exists(name):
-            break
+        try_name = get_name()
+        if not redis_db.exists(try_name):
+            name = try_name
 
     if redis_db.exists(name):
-        raise InvalidNameError('Name is in use') # Change this to custom exc?
-    
+        raise InvalidNameError('Name is in use')
 
     redis_db.hmset(name, {'sid': sid,
                           'password': password,
