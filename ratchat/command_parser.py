@@ -67,7 +67,7 @@ def set_temp_name(sid, username):
              {'msg': 'Successfully changed name from: {} to {}'
               .format(current_name, username),
               'username': 'server'})
-        send_active_users(broadcast=True)
+        #send_active_users(broadcast=True)
 
 
 def login(sid, username, password=None):
@@ -112,7 +112,7 @@ def login(sid, username, password=None):
         emit('chat_message', 
              {'username': 'server',
               'msg': 'Login Successful'})
-        send_active_users(broadcast=True)
+        #send_active_users(broadcast=True)
 
 
 def send_help_message(sid):

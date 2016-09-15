@@ -11,6 +11,15 @@ from ratchat.utils import send_recent_messages, send_active_users, \
                           create_username, unexpire 
 
 
+thread = None
+
+
+def background_thread():
+    while True:
+        send_active_users(broadcast=True)
+        socketio.sleep(1)
+        
+
 @app.route('/')
 def main():
     if not session.get('sid'):
@@ -44,8 +53,11 @@ def handle_connection():
         finally:
             assert redis_db.get(sid) is not None
     
-    send_active_users(broadcast=True)
+    #send_active_users(broadcast=True)
     join_room(sid)
+    global thread
+    if thread is None:
+        thread = socketio.start_background_task(target=background_thread)
     emit('testing_sid', {'sid': sid})
 
 
@@ -60,7 +72,7 @@ def handle_user_disconnect():
     if redis_db.hget(name, 'registered') == b'False':
         redis_db.expire(name, 10)
     print("Got Disconnect: {} {}".format(name, sid))
-    send_active_users(broadcast=True)
+    #send_active_users(broadcast=True)
 
 
 @socketio.on('chat_message')

@@ -76,6 +76,7 @@ class TestChat(unittest.TestCase):
         self.send_input('/login testuser1 testpass')
         messages = self.get_message_list(filter_by='server')
         self.assertIn('server: Login Successful', messages)
+        time.sleep(2)
         active_users = self.get_active_users()
         self.assertIn('testuser1', active_users)
 
