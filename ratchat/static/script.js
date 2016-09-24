@@ -1,68 +1,64 @@
 function escape(str) {
-  var div = document.createElement('div');
-  div.appendChild(document.createTextNode(str));
-  return div.innerHTML;
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
 }
 
-function update_chat(message) {
-  $('#chat_window').append("<p>" + message + "</p>");
-  $('#chat_window').scrollTop($('#chat_window')[0].scrollHeight);
+function update_chat(message, _cls) {
+    var cls = _cls ? _cls : '';
+    $('#chat_window').append("<p " + cls + ">" + message + "</p>");
+    $('#chat_window').scrollTop($('#chat_window')[0].scrollHeight);
 }
 
 
-$(document).ready( function() {
+$(document).ready(function() {
 
-  $('#chat_input').val('').focus();  
-
-  var socket = io.connect('http://' + document.domain + ':' + location.port);
-
-
-  socket.on('recent_messages', function(msg_list) {
-    for (var i = 0; i < msg_list.length; i++) {
-      update_chat(msg_list[i]['username'] + ": " + msg_list[i]['msg']);
-    }
-  });
-
-
-  socket.on('chat_message', function(data) {
-    update_chat(data['username'] + ": " + data['msg']);
-  });
-
-
-  socket.on('private_message', function(data) {
-    update_chat('Private message to ' + data['receiver'] + ' from ' + data['sender'] + ':');
-    update_chat(data['msg']);
-  });
-
-
-  socket.on('user_joined', function(joining_user) {
-    update_chat(joining_user + " has joined the chat");
-    /*
-    if ( $("#" + joining_user.replace(/ /g,'')).length == 0 ) {
-      $('#chat_users').append('<p id="' + joining_user.replace(/ /g, '') + '">' + joining_user + "</p>");
-    }
-    */
-  });
-
-
-  socket.on('active_users', function(data) {
-    if (data.length) {
-      $('#chat_users').empty();
-      for (var i = 0; i < data.length; i++) { 
-          $('#chat_users').append('<p id="' + data[i] + '">' + data[i] + "</p>");
-      }
-    }
-  });
-
-
-  $('#input_form').submit( function(e) {
-      e.preventDefault(); // prevents form from sending http request
-      if ($('#chat_input').val()) {
-        socket.emit('chat_message', { 
-          'msg': escape($('#chat_input').val()),
-        });
         $('#chat_input').val('').focus();
-      }
-  });
 
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+
+        socket.on('recent_messages', function(msg_list) {
+            for (var i = 0; i < msg_list.length; i++) {
+                update_chat(msg_list[i]['username'] + ": " + msg_list[i]['msg'], 'class="reg-msg"');
+            }
+        });
+
+
+        socket.on('chat_message', function(data) {
+            var msg_cls = data['username'] === 'server' ? 'class="server-msg"' : 'class="reg-msg"';
+            update_chat(data['username'] + ": " + data['msg'], msg_cls);
+        });
+
+
+        socket.on('private_message', function(data) {
+            update_chat(data['sender'] + '->' + data['receiver'] + ': ' + data['msg'],
+                'class="priv-msg"');
+        });
+
+
+        socket.on('user_joined', function(joining_user) {
+            update_chat(joining_user + " has joined the chat", 'class="notify-msg"');
+        });
+
+
+        socket.on('active_users', function(data) {
+            if (data.length) {
+                $('#chat_users').empty();
+                for (var i = 0; i < data.length; i++) {
+                    $('#chat_users').append('<p id="' + data[i] + '">' + data[i] + "</p>");
+                }
+            }
+        });
+
+
+        $('#input_form').submit(function(e) {
+            e.preventDefault(); // prevents form from sending http request
+            if ($('#chat_input').val()) {
+                socket.emit('chat_message', {
+                    'msg': escape($('#chat_input').val()),
+                });
+                $('#chat_input').val('').focus();
+            }
+        });
 });

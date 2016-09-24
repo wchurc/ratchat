@@ -1,59 +1,98 @@
-html,body,.container {
-	height:100%
+:root {
+    --main-bg-col: #020314;
+    --reg-msg-col: #8AE234;
+    --server-msg-col: #EF5939;
+    --priv-msg-col: #FCAF3E;
+    --notify-msg-col: #729FCF;
 }
 
-.container {
-  width: 80%;
-  height: 80%;
-  margin: 0 auto;
-}
-
-.container-full {
-	margin: 0 auto;
-	width: 100%;
-}
-
-.row {
-	height: 100%;
-}
-
-#chat_users {
-  border: 1px solid powderblue;
-  width: 20%;
-  height: 100%;
-  overflow: auto;
-  float: right;
-}
-
-#chat_window {
-    border: 1px solid powderblue;
-    width: 79%;
+html,
+body {
     height: 100%;
-    overflow: auto;
-    float: left;
-}
-
-#input_form {
     width: 100%;
-    margin: 0 auto;
-		padding: 0;
+    max-height: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    background-color: var(--main-bg-col);
 }
 
-#chat_input {
-    width: 90%;
-		float: left;
-		padding: 0;
-		margin: 0;
-}
-
-#chat_button {
-    width: 9%;
-		float: right;
-		padding: 0;
-		margin: 0;
+#chat_window,
+#chat_users {
+    border: 1px solid var(--notify-msg-col);
+    font-family: Consolas, Lucida Console, monospace;
 }
 
 p {
+    margin: 0;
+}
 
-  margin: 0
+.body {
+    display: flex;
+    flex-direction: column;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    position: absolute;
+}
+
+.flex-item {
+    flex-grow: 1;
+}
+
+.flex-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.bottom {}
+
+#chat_window,
+#chat_users {
+    padding: 10px;
+    overflow-y: auto;
+}
+
+#chat_window {
+    flex-grow: 8;
+}
+
+#chat_users {
+    flex-grow: 2;
+    color: var(--reg-msg-col);
+}
+
+#input_container {
+    align-self: end;
+    flex-grow: 0;
+    flex-shrink: 10;
+    border: 1px solid var(--notify-msg-col);
+}
+
+#chat_input {
+    background-color: var(--main-bg-col);
+    color: var(--reg-msg-col);
+    width: 100%;
+    border: 0;
+    padding: 5px;
+}
+
+.server-msg {
+    color: var(--server-msg-col);
+}
+
+.reg-msg {
+    color: var(--reg-msg-col);
+}
+
+.priv-msg {
+    color: var(--priv-msg-col);
+}
+
+.notify-msg {
+    color: var(--notify-msg-col);
+}
+
+#welcome_string {
+    color: var(--reg-msg-col);
 }
