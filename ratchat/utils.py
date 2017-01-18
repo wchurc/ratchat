@@ -5,13 +5,12 @@ from ratchat.name_generator import get_name
 from ratchat.exceptions import InvalidNameError
 
 
-
 def send_recent_messages(count=100):
     """
     Used on a new connection to send the 'count' most recent chat messages
     to the connected user.
     """
-    
+
     recent_message_ids = redis_db.zrange('messages:global', 0, count, desc=True)
     recent_message_ids.reverse()
     message_list = []
@@ -31,7 +30,6 @@ def send_active_users(broadcast=False):
 
     data = [name.decode() for name in redis_db.smembers('active_users')]
     socketio.emit('active_users', data, broadcast=broadcast)
-    
 
 
 def create_username(sid, name=None, password=None, registered=False,

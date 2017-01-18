@@ -8,7 +8,7 @@ from ratchat.name_generator import get_name
 from ratchat.exceptions import InvalidNameError, InvalidCommandError
 from ratchat.command_parser import execute_command
 from ratchat.utils import send_recent_messages, send_active_users, \
-                          create_username, unexpire 
+                          create_username, unexpire
 
 
 thread = None
@@ -18,7 +18,7 @@ def background_thread():
     while True:
         send_active_users(broadcast=True)
         socketio.sleep(1)
-        
+
 
 @app.route('/')
 def main():
@@ -32,16 +32,16 @@ def handle_connection():
     send_recent_messages()
     emit('chat_message', {'msg': 'Type /help for a list of commands.',
                           'username': 'server'})
-    
+
     sid = session.get('sid')
 
     if sid is None:
         session['sid'] = uuid.uuid4().hex
         sid = session.get('sid')
-    
+
     if redis_db.exists(sid):
         unexpire(sid)
-    
+
     if redis_db.get(sid) is None:
         try:
             name = create_username(sid)
@@ -52,7 +52,7 @@ def handle_connection():
             emit('user_joined', name, broadcast=True)
         finally:
             assert redis_db.get(sid) is not None
-    
+
     #send_active_users(broadcast=True)
     join_room(sid)
     global thread
@@ -68,7 +68,7 @@ def handle_user_disconnect():
     redis_db.srem('active_users', name)
 
     redis_db.expire(sid, 10)
- 
+
     if redis_db.hget(name, 'registered') == b'False':
         redis_db.expire(name, 10)
     print("Got Disconnect: {} {}".format(name, sid))
@@ -83,7 +83,7 @@ def handle_chat_message(message):
             execute_command(sid, message['msg'])
         except InvalidCommandError as e:
             print(e.args)
-            emit('chat_message', 
+            emit('chat_message',
                 {'msg': 'Invalid command. Type "/help" for list of commands',
                 'username': 'server'},
                 room=sid)

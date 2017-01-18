@@ -21,7 +21,7 @@ class SocketTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        pass 
+        pass
 
     @classmethod
     def tearDownClass(cls):
@@ -184,5 +184,4 @@ class TestRedisDB(unittest.TestCase):
         msg_content = redis_db.hget('message:' + message_id, 'msg').decode()
         self.assertEqual(msg_content, 'Are you logging?')
         client.disconnect()
-
 

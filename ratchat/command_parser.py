@@ -7,15 +7,15 @@ from ratchat.utils import create_username, send_active_users
 def private_message(sender_sid, receiver, *message):
     """Sends a private message to the receiver if receiver is currently
     active."""
-    
+
     if redis_db.sismember('active_users', receiver) is False:
-        emit('chat_message', 
+        emit('chat_message',
              {'username': 'server',
               'msg': "{} is not currently active".format(receiver)})
         return
-    
+
     msg = ' '.join(message)
-    
+
     try:
         sender_name = redis_db.get(sender_sid)
         receiver_sid = redis_db.hget(receiver, 'sid')
@@ -27,11 +27,11 @@ def private_message(sender_sid, receiver, *message):
             raise Exception('Recipient sid not found in the database.')
         sender_name = sender_name.decode()
         receiver_sid = receiver_sid.decode()
-    
+
     except Exception as e:
         raise InvalidCommandError(e.args)
-    
-    else:    
+
+    else:
         data = {'sender': sender_name,
                 'receiver': receiver,
                 'msg': msg}
@@ -43,15 +43,15 @@ def set_temp_name(sid, username):
     """Associates sid with a new temporary username if it's available."""
 
     name_exists = redis_db.exists(username)
-    
+
     if name_exists:
         #raise Exception('Username is taken')
         emit('chat_message', {'msg': 'That name is in use.',
                                  'username': 'server'})
         return
-    
+
     current_name = redis_db.get(sid).decode()
-    
+
     # Try to create new temp username
     try:
         create_username(sid, name=username)
@@ -73,7 +73,7 @@ def set_temp_name(sid, username):
 def login(sid, username, password=None):
     """ Log in as a registered user. If username does not exist
     it will be created."""
-    
+
     if redis_db.sismember('active_users', username):
         emit('chat_message',
              {'msg': '{} is already logged in'.format(username),
@@ -87,9 +87,9 @@ def login(sid, username, password=None):
 
     try:
         if redis_db.exists(username) is False:
-            create_username(sid, name=username, password=password, 
+            create_username(sid, name=username, password=password,
                             registered=True)
-        else:        
+        else:
             if password == redis_db.hget(username, 'password').decode():
                 with redis_db.pipeline() as pipe:
                     pipe.sadd('active_users', username)
@@ -101,15 +101,15 @@ def login(sid, username, password=None):
 
 
     except InvalidPasswordError as e:
-         emit('chat_message', 
+         emit('chat_message',
              {'username': 'server',
               'msg': 'Login failed: ' + e.args[0]})
     else:
         if redis_db.hget(current_name, 'registered') == b'False':
             redis_db.delete(current_name)
         redis_db.srem('active_users', current_name)
-        
-        emit('chat_message', 
+
+        emit('chat_message',
              {'username': 'server',
               'msg': 'Login Successful'})
         #send_active_users(broadcast=True)
