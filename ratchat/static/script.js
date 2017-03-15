@@ -62,7 +62,7 @@ $(document).ready(function() {
 			socket.emit('chat_message', {
 				'msg': escape($('#chat-input').val()),
 			});
-			$('#chat-input').val('').focus();
 		}
+		$('#chat-input').val('').focus();
 	});
 });
