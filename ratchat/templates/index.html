@@ -2,30 +2,45 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>ratchat</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="stylesheet" href="static/styles.css">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>ratchat</title>
+	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+	<link rel="stylesheet" href="static/styles.css">
 </head>
 
 <body>
-    <div class="body">
-        <div class="flex-container">
-            <div class="flex-item" id="chat_window"></div>
-            <div class="flex-item" id="chat_users"></div>
-        </div>
+	<div id="main-container">
 
-        <div class="flex-item bottom" id="input_container">
-            <form id="input_form">
-                <input id="chat_input" autocomplete="off"></input>
-            </form>
-        </div>
-    </div>
+		<div id="top-container">
+			<div id="chat-window"></div>
+			<div id="users-window"></div>
+		</div>
+
+		<div id="bottom-container">
+			<div id="users-button">&#x265f;</div>
+			<form id="input-form">
+				<input id="chat-input" autocomplete="off"></input>
+			</form>
+			<div id="submit-button">&#x21b2;</div>
+		</div>
+
+	</div>
 
 
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" charset="utf-8" src="static/script.js"></script>
-    <script type="text/javascript" src="static/socket.io.js"></script>
+	<script>
+	/* Toggle button for active users window */
+	var users_win = document.querySelector('#users-window');
+	var users_btn = document.querySelector('#users-button');
+
+	users_btn.addEventListener('click', function(e) {
+		users_win.classList.toggle('open');
+		e.stopPropagation();
+	});
+	</script>
+	<script type="text/javascript" src="static/jquery.js"></script>
+	<script type="text/javascript" charset="utf-8" src="static/script.js"></script>
+	<script type="text/javascript" src="static/socket.io.js"></script>
 
 </body>
 
