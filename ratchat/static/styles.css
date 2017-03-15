@@ -1,9 +1,13 @@
 :root {
-	--main-bg-col: #020314;
-	--reg-msg-col: #8AE234;
-	--server-msg-col: #EF5939;
-	--priv-msg-col: #FCAF3E;
-	--notify-msg-col: #729FCF;
+	--main-bg-col: #1B2B34;
+	--sec-bg-col: #343D46;
+	--ter-bg-col: #4F5B66;
+	--reg-msg-col: #CDD3DE;
+	--server-msg-col: #EC5f67;
+	--priv-msg-col: #FAC863;
+	--notify-msg-col: #5FB3B3;
+	--highlight-col: #99C794;
+	--username-col: #6699CC;
 }
 
 * { 
@@ -22,12 +26,19 @@
 	word-wrap: break-word;
 }
 
+html {
+	background-color: var(--main-bg-col);
+}
+
+body {
+	background-color: var(--sec-bg-col);
+}
+
 html,
 body {
 	height: 100%;
 	width: 100%;
 	overflow: hidden;
-	background-color: var(--main-bg-col);
 }
 
 #main-container {
@@ -68,8 +79,8 @@ body {
 	-webkit-transform: translate(200px, 0);
 	transform: translate(200px, 0);
 	transition: transform 0.3s ease;
-	background-color: var(--main-bg-col);
-	color: var(--reg-msg-col);
+	background-color: var(--sec-bg-col);
+	color: var(--username-col);
 }
 
 #users-window.open {
@@ -91,8 +102,13 @@ body {
 	min-height: 48px;
 	min-width: 48px;
 	font-size: xx-large;
-	color: var(--reg-msg-col);
-	background-color: inherit;
+	color: var(--username-col);
+	background-color: var(--sec-bg-col);
+}
+
+#users-button:hover,
+#submit-button:hover {
+	color: var(--highlight-col);
 }
 
 #input-form-div {
@@ -107,7 +123,7 @@ body {
 
 #chat-input {
 	flex-grow: 1;
-	background-color: #202020;
+	background-color: var(--ter-bg-col);
 	color: var(--reg-msg-col);
 }
 
@@ -125,6 +141,10 @@ body {
 
 .notify-msg {
 	color: var(--notify-msg-col);
+}
+
+.username {
+	color: var(--username-col);
 }
 
 #welcome_string {

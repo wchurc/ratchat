@@ -24,14 +24,16 @@ $(document).ready(function() {
 
 	socket.on('recent_messages', function(msg_list) {
 		for (var i = 0; i < msg_list.length; i++) {
-			update_chat(msg_list[i]['username'] + ": " + msg_list[i]['msg'], 'class="reg-msg"');
+			update_chat('<span class="username">' + msg_list[i]['username'] 
+					+ "</span>" + ": " + msg_list[i]['msg'], 'class="reg-msg"');
 		}
 	});
 
 
 	socket.on('chat_message', function(data) {
 		var msg_cls = data['username'] === 'server' ? 'class="server-msg"' : 'class="reg-msg"';
-		update_chat(data['username'] + ": " + data['msg'], msg_cls);
+		update_chat('<span class="username">' + data['username']
+				+ "</span>" + ": " + data['msg'], msg_cls);
 	});
 
 
