@@ -64,7 +64,7 @@ body {
 	padding: 10px;
 	overflow-y: auto;
 
-	border: 1px solid var(--notify-msg-col);
+	border: 0px solid var(--notify-msg-col);
 	font-family: Consolas, Lucida Console, monospace;
 }
 
@@ -81,6 +81,7 @@ body {
 	transition: transform 0.3s ease;
 	background-color: var(--sec-bg-col);
 	color: var(--username-col);
+	border: 5px solid var(--main-bg-col);
 }
 
 #users-window.open {
@@ -127,6 +128,18 @@ body {
 	color: var(--reg-msg-col);
 }
 
+.horizontal-break {
+	width: 100%;
+	height: 5px;
+	background-color: var(--main-bg-col);
+}
+
+.vertical-break {
+	width: 5px;
+	height: 100%;
+	background-color: var(--main-bg-col);
+}
+
 .server-msg {
 	color: var(--server-msg-col);
 }
@@ -165,6 +178,7 @@ body {
 		right: 0px;
 		-webkit-transform: translate(0, 0);
 		transform: translate(0, 0);
+		border: none;
 	}
 }
 
