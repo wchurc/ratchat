@@ -1,25 +1,34 @@
 import time
 import unittest
+import os
 
+import redis
 from selenium import webdriver
+
+os.environ['RATCHAT_TESTING'] = 'False'
+from ratchat import redis_db
+assert type(redis_db) == redis.client.StrictRedis
+redis_db.flushall()
+
+host = "http://0.0.0.0:5000"
 
 class TestChat(unittest.TestCase):
 
     def setUp(self):
-        self.driver = webdriver.Firefox()
+        self.driver = webdriver.Chrome()
 
     def tearDown(self):
         self.driver.close()
 
     def get_active_users(self):
-        active_users_element = self.driver.find_element_by_id('chat_users')
+        active_users_element = self.driver.find_element_by_id('users-window')
         return active_users_element.text.split('\n')
 
     def get_message_list(self, filter_by=None, driver=None):
         if driver is None:
             driver = self.driver
-        chat_window = driver.find_element_by_id('chat_window')
-        messages = chat_window.text.split('\n')
+        chat_window = driver.find_element_by_id('chat-window')
+        messages = chat_window.text.splitlines()
         if filter_by is not None:
             return [message for message in messages if filter_by in message]
         return messages
@@ -27,15 +36,16 @@ class TestChat(unittest.TestCase):
     def send_input(self, string, driver=None):
         if driver is None:
             driver = self.driver
-        chat_input = driver.find_element_by_id('chat_input')
+        chat_input = driver.find_element_by_id('chat-input')
         chat_input.clear()
-        chat_input.send_keys(string + '\n')
+        chat_input.send_keys(string)
+        chat_input.submit()
 
     def test_basic_chat_functionality(self):
 
         # Reggie loads page and sees a chat window
 
-        self.driver.get('localhost:5000')
+        self.driver.get(host)
         self.assertIn('ratchat', self.driver.title)
 
         # Reggie sends a message and sees that a username has been
@@ -49,13 +59,14 @@ class TestChat(unittest.TestCase):
         # Reggie sees that the automatically assigned username shows
         # up in a window with all the other active users
 
+        time.sleep(1)
+        name = self.get_message_list(filter_by='Hello room')[-1].split(':')[0]
         active_users = self.get_active_users()
 
-        name = self.get_message_list(filter_by='Hello room')[-1].split(':')[0]
         self.assertIn(name, active_users)
 
     def test_chat_commands(self):
-        self.driver.get('localhost:5000')
+        self.driver.get(host)
 
         # Reggie saw a message from the server that showed him how
         # to see a list of commands he could use
@@ -83,13 +94,15 @@ class TestChat(unittest.TestCase):
         # A friend logs in as testuser2 and a stranger enters the chat
 
         driver2 = webdriver.Firefox()
-        driver2.get('localhost:5000')
+        driver2.get(host)
         time.sleep(2)
         self.send_input('/login testuser2 testpass', driver=driver2)
         time.sleep(2)
 
-        driver3 = webdriver.Firefox()
-        driver3.get('localhost:5000')
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--incognito')
+        driver3 = webdriver.Chrome(chrome_options=chrome_options)
+        driver3.get(host)
 
         time.sleep(2)
 
@@ -120,7 +133,8 @@ class TestChat(unittest.TestCase):
 
         # testuser2 logs off and is no longer visible in the users window
 
-        driver2.close()
+        driver2.quit() # Using quit instead of close because of issue with Selenium
+        time.sleep(2)
         active_users = self.get_active_users()
         self.assertNotIn('testuser2', active_users)
 
@@ -129,7 +143,7 @@ class TestChat(unittest.TestCase):
 
         self.send_input('/msg testuser2 You still here?')
         last_message = self.get_message_list()[-1]
-        self.assertIn('testuser2 is not currently active')
+        self.assertIn('testuser2 is not currently active', last_message)
 
 
     def test_registered_names(self):
