@@ -56,6 +56,7 @@ body {
 	max-height: 100%;
 	width: 100%;
 	overflow: hidden;
+	flex-grow: 1;
 }
 
 #chat-window,
@@ -135,9 +136,9 @@ body {
 }
 
 .vertical-break {
-	width: 5px;
-	height: 100%;
+	flex: 0 0 5px;
 	background-color: var(--main-bg-col);
+	display: none;
 }
 
 .server-msg {
@@ -164,6 +165,10 @@ body {
 	color: var(--reg-msg-col);
 }
 
+/*
+ * Make users window fixed and hide the toggle button
+ * when more than 900px wide
+ */
 @media screen and (min-width: 900px) {
 
 	#users-button {
@@ -180,8 +185,14 @@ body {
 		transform: translate(0, 0);
 		border: none;
 	}
+	.vertical-break {
+		display: block;
+	}
 }
 
+/*
+ * Center body and use margin for large screens
+ */
 @media screen and (min-height: 800px) {
 	body {
 		height: 90vh;
