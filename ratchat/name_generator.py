@@ -1,9 +1,9 @@
-default_names = {'Reggie_Chode', 'Mo_Dick'}
+default_names = {'anonymous'}
 
 
 def name_gen():
     """
-    Yields a name from the used_names dict. Will append a unique 
+    Yields a name from the used_names dict. Will append a unique
     incremental # if the name has already been used.
     """
     inc = 0
