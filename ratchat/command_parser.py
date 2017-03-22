@@ -1,7 +1,7 @@
 from flask_socketio import emit, join_room
 from ratchat import app, redis_db, socketio
 from ratchat.exceptions import InvalidCommandError, InvalidPasswordError
-from ratchat.utils import create_username, send_active_users
+from ratchat.utils import create_username, send_active_users, check_name_length
 
 
 def private_message(sender_sid, receiver, *message):
@@ -42,6 +42,9 @@ def private_message(sender_sid, receiver, *message):
 def set_temp_name(sid, username):
     """Associates sid with a new temporary username if it's available."""
 
+    if check_name_length(sid, username):
+        return
+
     name_exists = redis_db.exists(username)
 
     if name_exists:
@@ -73,6 +76,9 @@ def set_temp_name(sid, username):
 def login(sid, username, password=None):
     """ Log in as a registered user. If username does not exist
     it will be created."""
+
+    if check_name_length(sid, username):
+        return
 
     if redis_db.sismember('active_users', username):
         emit('chat_message',

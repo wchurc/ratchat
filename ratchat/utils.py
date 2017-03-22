@@ -1,6 +1,6 @@
 from flask_socketio import emit, join_room, send
 
-from ratchat import redis_db, socketio
+from ratchat import app, redis_db, socketio
 from ratchat.name_generator import get_name
 from ratchat.exceptions import InvalidNameError
 
@@ -35,7 +35,7 @@ def send_active_users(broadcast=False):
 def create_username(sid, name=None, password=None, registered=False,
                     active=True):
     """
-    Creates a new unique name for the given sid. Will use get_name 
+    Creates a new unique name for the given sid. Will use get_name
     if no name is provided.
     """
 
@@ -65,6 +65,50 @@ def unexpire(sid):
     name = redis_db.get(sid).decode()
     redis_db.persist(name)
     redis_db.sadd('active_users', name)
+
+
+def check_timeout(sid):
+    """
+    Keeps track of the number of socket messages emitted by a particular
+    user. If number of messages sent in the past MSG_LIMIT_TIMEOUT seconds
+    exceeds MSG_LIMIT then the user will be disconnected.
+    Returns True if the limit was exceeded.
+    """
+    return False
+
+
+def check_msg_length(sid, msg):
+    """
+    Checks message length against MAX_MSG_LENGTH. Emits a notification
+    to the user that the message length was exceeded.
+    Returns True if the limit was exceeded.
+    """
+    if len(msg) > app.config['MAX_MSG_LENGTH']:
+        # Send notification
+        emit('chat_message',
+            {'msg': 'Message exceeded max length!',
+            'username': 'server'},
+            room=sid)
+
+        return True
+
+    return False
+
+
+def check_name_length(sid, username):
+    """
+    Checks if name length is > MAX_NAME_LENGTH. Emits a notification
+    to the user and returns True if the length was exceeded.
+    """
+    if len(username) > app.config['MAX_NAME_LENGTH']:
+        emit('chat_message',
+            {'msg': 'Username exceeds max length!',
+            'username': 'server'},
+            room=sid)
+
+        return True
+
+    return False
 
 
 def noisy_print(thing):
