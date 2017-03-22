@@ -6,7 +6,10 @@ function escape(str) {
 
 function update_chat(message, _cls) {
 	var cls = _cls ? _cls : '';
-	$('#chat-window').append("<p " + cls + ">" + message + "</p>");
+	var p = document.createElement('p');
+	p.classList.add(cls);
+	p.innerHTML = message;
+	$('#chat-window').append(p);
 	$('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
 }
 
@@ -25,13 +28,13 @@ $(document).ready(function() {
 	socket.on('recent_messages', function(msg_list) {
 		for (var i = 0; i < msg_list.length; i++) {
 			update_chat('<span class="username">' + msg_list[i]['username'] 
-					+ "</span>" + ": " + msg_list[i]['msg'], 'class="reg-msg"');
+					+ "</span>" + ": " + msg_list[i]['msg'], 'reg-msg');
 		}
 	});
 
 
 	socket.on('chat_message', function(data) {
-		var msg_cls = data['username'] === 'server' ? 'class="server-msg"' : 'class="reg-msg"';
+		var msg_cls = data['username'] === 'server' ? 'server-msg' : 'reg-msg';
 		update_chat('<span class="username">' + data['username']
 				+ "</span>" + ": " + data['msg'], msg_cls);
 	});
@@ -39,12 +42,12 @@ $(document).ready(function() {
 
 	socket.on('private_message', function(data) {
 		update_chat(data['sender'] + '->' + data['receiver'] + ': ' + data['msg'],
-				'class="priv-msg"');
+				'priv-msg');
 	});
 
 
 	socket.on('user_joined', function(joining_user) {
-		update_chat(joining_user + " has joined the chat", 'class="notify-msg"');
+		update_chat(joining_user + " has joined the chat", 'notify-msg');
 	});
 
 
@@ -62,7 +65,7 @@ $(document).ready(function() {
 		e.preventDefault(); // prevents form from sending http request
 		if ($('#chat-input').val()) {
 			socket.emit('chat_message', {
-				'msg': escape($('#chat-input').val()),
+				'msg': $('#chat-input').val(),
 			});
 		}
 		$('#chat-input').val('').focus();
