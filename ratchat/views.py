@@ -18,6 +18,7 @@ thread = None
 
 
 def active_users_thread():
+    # Broadcast the names of all the users online once every second
     while True:
         send_active_users(broadcast=True)
         socketio.sleep(1)
@@ -25,6 +26,7 @@ def active_users_thread():
 
 @app.route('/')
 def main():
+    # Store a sid in the session if one doesn't already exist and serve index
     if not session.get('sid'):
         session['sid'] = uuid.uuid4().hex
     return render_template('index.html')
@@ -39,6 +41,7 @@ def handle_connection():
         if check_timeout(sid):
             return
 
+    # Send greetings
     send_recent_messages()
     emit('chat_message', {'msg': 'Type /help for a list of commands.',
                           'username': 'server'})
@@ -51,17 +54,23 @@ def handle_connection():
     if redis_db.exists(sid):
         unexpire(sid)
 
+    # Make sure this sid has a name
     if redis_db.get(sid) is None:
         try:
             name = create_username(sid)
+
         except Exception as e:
             print(e)
             return
+
         else:
             emit('user_joined', name, broadcast=True)
+
         finally:
+            # Sanity check
             assert redis_db.get(sid) is not None
 
+    # Private messages will be sent to the room identified by sid
     join_room(sid)
 
     # Start the background thread if it doesn't already exist
@@ -75,6 +84,8 @@ def handle_connection():
 
 @socketio.on('disconnect')
 def handle_user_disconnect():
+    # Set expiration for temporary data in the database rather than removing it
+    # immediately. This way the data won't be deleted if the page is refreshed.
     sid = session.get('sid')
     expire(sid)
 
@@ -94,6 +105,7 @@ def handle_chat_message(message):
     if message['msg'][0] == '/':
         try:
             execute_command(sid, message['msg'])
+
         except InvalidCommandError as e:
             print(e.args)
             emit('chat_message',
@@ -103,9 +115,11 @@ def handle_chat_message(message):
 
     # Forward chat messages
     else:
+        # Send the message
         message['username'] = redis_db.get(sid).decode()
         emit('chat_message', message, broadcast=True)
 
+        # Log the message
         msg_id = uuid.uuid4().hex
         redis_db.zadd('messages:global', time.time(), msg_id)
         redis_db.hmset('message:' + msg_id, message)

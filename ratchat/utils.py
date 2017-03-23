@@ -14,15 +14,20 @@ def send_recent_messages(count=100):
     to the connected user.
     """
 
+    # Get most recent message ids from database
     recent_message_ids = redis_db.zrange('messages:global', 0, count, desc=True)
     recent_message_ids.reverse()
     message_list = []
+
+    # Create list of message dicts
     for message_id in recent_message_ids:
         message = {}
         bytes_message = redis_db.hgetall(b'message:' + message_id)
         message = { key.decode() : value.decode() \
                    for key, value in bytes_message.items() }
         message_list.append(message)
+
+    # Send the messages
     emit('recent_messages', message_list)
 
 
@@ -42,6 +47,7 @@ def create_username(sid, name=None, password=None, registered=False,
     if no name is provided.
     """
 
+    # If a name is not provided generate names until an available one is found
     while name is None:
         try_name = get_name()
         if not redis_db.exists(try_name):
@@ -50,11 +56,13 @@ def create_username(sid, name=None, password=None, registered=False,
     if redis_db.exists(name):
         raise InvalidNameError('Name is in use')
 
+    # Add the name to the database and associated it with sid
     redis_db.hmset(name, {'sid': sid,
                           'password': password,
                           'registered': registered})
     redis_db.set(sid, name)
     redis_db.sadd('active_users', name)
+
     return name
 
 
@@ -63,10 +71,12 @@ def expire(sid):
     Sets expiration on non-persisting redis items.
     """
     name = redis_db.get(sid)
-    redis_db.srem('active_users', name)
 
+    # Remove the name from active users and expire the sid
+    redis_db.srem('active_users', name)
     redis_db.expire(sid, 10)
 
+    # Only expire the name hash if it is a temporary name
     if redis_db.hget(name, 'registered') == b'False':
         redis_db.expire(name, 10)
 

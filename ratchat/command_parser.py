@@ -8,6 +8,7 @@ def private_message(sender_sid, receiver, *message):
     """Sends a private message to the receiver if receiver is currently
     active."""
 
+    # Check if the receiver is active
     if redis_db.sismember('active_users', receiver) is False:
         emit('chat_message',
              {'username': 'server',
@@ -17,14 +18,18 @@ def private_message(sender_sid, receiver, *message):
     msg = ' '.join(message)
 
     try:
+        # Get sender's name and receiver's sid from the database
         sender_name = redis_db.get(sender_sid)
         receiver_sid = redis_db.hget(receiver, 'sid')
+
         if sender_name is None:
             raise Exception('Sender name not found in the database.')
+
         if receiver_sid is None:
             emit('chat_message', {'username': 'server',
                               'msg': "I don't know who that is"})
             raise Exception('Recipient sid not found in the database.')
+
         sender_name = sender_name.decode()
         receiver_sid = receiver_sid.decode()
 
@@ -32,6 +37,7 @@ def private_message(sender_sid, receiver, *message):
         raise InvalidCommandError(e.args)
 
     else:
+        # Send the message
         data = {'sender': sender_name,
                 'receiver': receiver,
                 'msg': msg}
@@ -48,7 +54,6 @@ def set_temp_name(sid, username):
     name_exists = redis_db.exists(username)
 
     if name_exists:
-        #raise Exception('Username is taken')
         emit('chat_message', {'msg': 'That name is in use.',
                                  'username': 'server'})
         return
@@ -58,19 +63,21 @@ def set_temp_name(sid, username):
     # Try to create new temp username
     try:
         create_username(sid, name=username)
+
     except Exception as e:
         raise InvalidCommandError(e.args)
+
     else:
-        # CLean up and delete old name if it was temporary
+        # Clean up and delete old name if it was temporary
         if redis_db.hget(current_name, 'registered') == b'False':
             redis_db.delete(current_name)
+
         redis_db.srem('active_users', current_name)
 
         emit('chat_message',
              {'msg': 'Successfully changed name from: {} to {}'
               .format(current_name, username),
               'username': 'server'})
-        #send_active_users(broadcast=True)
 
 
 def login(sid, username, password=None):
@@ -80,12 +87,14 @@ def login(sid, username, password=None):
     if check_name_length(sid, username):
         return
 
+    # Check if already logged in
     if redis_db.sismember('active_users', username):
         emit('chat_message',
              {'msg': '{} is already logged in'.format(username),
               'username': 'server'})
         return
 
+    # Require a password
     if password is None:
         raise InvalidPasswordError('Password is required')
 
@@ -93,10 +102,14 @@ def login(sid, username, password=None):
 
     try:
         if redis_db.exists(username) is False:
+            # Create the username if it doesn't already exist
             create_username(sid, name=username, password=password,
                             registered=True)
+
         else:
+            # Check password
             if password == redis_db.hget(username, 'password').decode():
+                # Login
                 with redis_db.pipeline() as pipe:
                     pipe.sadd('active_users', username)
                     pipe.set(sid, username)
@@ -105,12 +118,13 @@ def login(sid, username, password=None):
             else:
                 raise InvalidPasswordError('Password is incorrect')
 
-
     except InvalidPasswordError as e:
          emit('chat_message',
              {'username': 'server',
               'msg': 'Login failed: ' + e.args[0]})
+
     else:
+        # Logout or delete previously used username
         if redis_db.hget(current_name, 'registered') == b'False':
             redis_db.delete(current_name)
         redis_db.srem('active_users', current_name)
@@ -118,7 +132,6 @@ def login(sid, username, password=None):
         emit('chat_message',
              {'username': 'server',
               'msg': 'Login Successful'})
-        #send_active_users(broadcast=True)
 
 
 def send_help_message(sid):
@@ -127,6 +140,7 @@ def send_help_message(sid):
     '/login username password<br>' \
     '/callme username<br>' \
     '/help<br>'
+
     emit('chat_message', {'msg': msg, 'username': 'server'}, room=sid)
 
 
@@ -154,15 +168,22 @@ command_dict = {
 
 
 def execute_command(sid, command_string):
+    # Sanity check
     assert sid is not None
+
+    # Parse command
     chunks = [x.strip() for x in command_string.split(' ') if x]
     command = chunks[0]
     args = chunks[1:]
+
+    # Try to execute
     if command not in command_dict:
         raise InvalidCommandError('Unknown command')
+
     else:
         try:
             command_dict[command](sid, *args)
+
         except Exception as e:
             print(e.args)
             raise InvalidCommandError(e.args)
