@@ -1,7 +1,8 @@
 from flask_socketio import emit, join_room
 from ratchat import app, redis_db, socketio
 from ratchat.exceptions import InvalidCommandError, InvalidPasswordError
-from ratchat.utils import create_username, send_active_users, check_name_length
+from ratchat.utils import create_username, send_active_users, check_name_length, \
+        send_server_msg
 
 
 def private_message(sender_sid, receiver, *message):
@@ -10,9 +11,7 @@ def private_message(sender_sid, receiver, *message):
 
     # Check if the receiver is active
     if redis_db.sismember('active_users', receiver) is False:
-        emit('chat_message',
-             {'username': 'server',
-              'msg': "{} is not currently active".format(receiver)})
+        send_server_msg("{} is not currently active".format(receiver))
         return
 
     msg = ' '.join(message)
@@ -26,8 +25,7 @@ def private_message(sender_sid, receiver, *message):
             raise Exception('Sender name not found in the database.')
 
         if receiver_sid is None:
-            emit('chat_message', {'username': 'server',
-                              'msg': "I don't know who that is"})
+            send_server_msg("I don't know who that is")
             raise Exception('Recipient sid not found in the database.')
 
         sender_name = sender_name.decode()
@@ -54,8 +52,7 @@ def set_temp_name(sid, username):
     name_exists = redis_db.exists(username)
 
     if name_exists:
-        emit('chat_message', {'msg': 'That name is in use.',
-                                 'username': 'server'})
+        send_server_msg('That name is in use.')
         return
 
     current_name = redis_db.get(sid).decode()
@@ -74,10 +71,8 @@ def set_temp_name(sid, username):
 
         redis_db.srem('active_users', current_name)
 
-        emit('chat_message',
-             {'msg': 'Successfully changed name from: {} to {}'
-              .format(current_name, username),
-              'username': 'server'})
+        send_server_msg('Successfully changed name from: {} to {}'
+                        .format(current_name, username))
 
 
 def login(sid, username, password=None):
@@ -89,9 +84,7 @@ def login(sid, username, password=None):
 
     # Check if already logged in
     if redis_db.sismember('active_users', username):
-        emit('chat_message',
-             {'msg': '{} is already logged in'.format(username),
-              'username': 'server'})
+        send_server_msg('{} is already logged in'.format(username))
         return
 
     # Require a password
@@ -119,9 +112,7 @@ def login(sid, username, password=None):
                 raise InvalidPasswordError('Password is incorrect')
 
     except InvalidPasswordError as e:
-         emit('chat_message',
-             {'username': 'server',
-              'msg': 'Login failed: ' + e.args[0]})
+        send_server_msg('Login failed: ' + e.args[0])
 
     else:
         # Logout or delete previously used username
@@ -129,9 +120,7 @@ def login(sid, username, password=None):
             redis_db.delete(current_name)
         redis_db.srem('active_users', current_name)
 
-        emit('chat_message',
-             {'username': 'server',
-              'msg': 'Login Successful'})
+        send_server_msg('Login Successful')
 
 
 def send_help_message(sid):
@@ -141,7 +130,7 @@ def send_help_message(sid):
     '/callme username<br>' \
     '/help<br>'
 
-    emit('chat_message', {'msg': msg, 'username': 'server'}, room=sid)
+    send_server_msg(msg, room=sid)
 
 
 def join_room(sid, room):

@@ -11,7 +11,7 @@ from ratchat.exceptions import InvalidNameError, InvalidCommandError
 from ratchat.command_parser import execute_command
 from ratchat.utils import send_recent_messages, send_active_users, \
         create_username, unexpire, check_timeout, check_msg_length, \
-        expire
+        expire, send_server_msg
 
 
 thread = None
@@ -43,8 +43,7 @@ def handle_connection():
 
     # Send greetings
     send_recent_messages()
-    emit('chat_message', {'msg': 'Type /help for a list of commands.',
-                          'username': 'server'})
+    send_server_msg('Type /help for a list of commands.')
 
     # Make sure there is a valid sid for this session
     if sid is None:
@@ -108,10 +107,8 @@ def handle_chat_message(message):
 
         except InvalidCommandError as e:
             print(e.args)
-            emit('chat_message',
-                {'msg': 'Invalid command. Type "/help" for list of commands',
-                'username': 'server'},
-                room=sid)
+            send_server_msg('Invalid command. Type "/help" for list of commands',
+                            room=sid)
 
     # Forward chat messages
     else:

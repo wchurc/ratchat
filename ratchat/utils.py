@@ -37,7 +37,12 @@ def send_active_users(broadcast=False):
     """
 
     data = [name.decode() for name in redis_db.smembers('active_users')]
+    # 'socketio.emit' is used here rather than the context-sensitive 'emit'
     socketio.emit('active_users', data, broadcast=broadcast)
+
+
+def send_server_msg(message, **kwargs):
+    emit('chat_message', {'msg': message, 'username': 'server'}, **kwargs)
 
 
 def create_username(sid, name=None, password=None, registered=False,
@@ -126,10 +131,7 @@ def kick_user(sid):
     global kicked
     kicked.add(sid)
 
-    emit('chat_message',
-        {'msg': "Settle down now! (You've been disconnected...)",
-        'username': 'server'},
-        room=sid)
+    send_server_msg("Settle down now! (You've been disconnected...)", room=sid)
 
     disconnect()
     expire(sid)
@@ -142,10 +144,7 @@ def check_msg_length(sid, msg):
     """
     if len(msg) > app.config['MAX_MSG_LENGTH']:
         # Send notification
-        emit('chat_message',
-            {'msg': 'Message exceeded max length!',
-            'username': 'server'},
-            room=sid)
+        send_server_msg("Message exceeded max length!", room=sid)
 
         return True
 
@@ -158,10 +157,7 @@ def check_name_length(sid, username):
     to the user and returns True if the length was exceeded.
     """
     if len(username) > app.config['MAX_NAME_LENGTH']:
-        emit('chat_message',
-            {'msg': 'Username exceeds max length!',
-            'username': 'server'},
-            room=sid)
+        send_server_msg("Username exceeds max length!", room=sid)
 
         return True
 
