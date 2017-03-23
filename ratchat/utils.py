@@ -1,9 +1,12 @@
-from flask_socketio import emit, join_room, send
+import time
+
+from flask_socketio import disconnect, emit, join_room, send
 
 from ratchat import app, redis_db, socketio
 from ratchat.name_generator import get_name
 from ratchat.exceptions import InvalidNameError
 
+kicked = set()
 
 def send_recent_messages(count=100):
     """
@@ -55,6 +58,19 @@ def create_username(sid, name=None, password=None, registered=False,
     return name
 
 
+def expire(sid):
+    """
+    Sets expiration on non-persisting redis items.
+    """
+    name = redis_db.get(sid)
+    redis_db.srem('active_users', name)
+
+    redis_db.expire(sid, 10)
+
+    if redis_db.hget(name, 'registered') == b'False':
+        redis_db.expire(name, 10)
+
+
 def unexpire(sid):
     """
     Persists database keys and adds the name associated with the given sid
@@ -74,8 +90,39 @@ def check_timeout(sid):
     exceeds MSG_LIMIT then the user will be disconnected.
     Returns True if the limit was exceeded.
     """
+    # If the sid has been kicked already, quit early
+    global kicked
+    if sid in kicked:
+        return True
+
+    # Check activty level
+    timestamp = time.time()
+    min_time = timestamp - app.config['MSG_LIMIT_TIMEOUT']
+    activity_zset = sid + ':activity'
+
+    redis_db.zadd(activity_zset, timestamp, timestamp)
+    activity_count = redis_db.zcount(activity_zset, min_time, float('inf'))
+
+    # Kick over active user
+    if activity_count >= app.config['MSG_LIMIT']:
+        kick_user(sid)
+        return True
+
     return False
 
+
+def kick_user(sid):
+    # This is not a robust way of dealing with malicious users.
+    global kicked
+    kicked.add(sid)
+
+    emit('chat_message',
+        {'msg': "Settle down now! (You've been disconnected...)",
+        'username': 'server'},
+        room=sid)
+
+    disconnect()
+    expire(sid)
 
 def check_msg_length(sid, msg):
     """

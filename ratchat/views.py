@@ -10,7 +10,8 @@ from ratchat.name_generator import get_name
 from ratchat.exceptions import InvalidNameError, InvalidCommandError
 from ratchat.command_parser import execute_command
 from ratchat.utils import send_recent_messages, send_active_users, \
-        create_username, unexpire, check_timeout, check_msg_length
+        create_username, unexpire, check_timeout, check_msg_length, \
+        expire
 
 
 thread = None
@@ -75,13 +76,7 @@ def handle_connection():
 @socketio.on('disconnect')
 def handle_user_disconnect():
     sid = session.get('sid')
-    name = redis_db.get(sid)
-    redis_db.srem('active_users', name)
-
-    redis_db.expire(sid, 10)
-
-    if redis_db.hget(name, 'registered') == b'False':
-        redis_db.expire(name, 10)
+    expire(sid)
 
 
 @socketio.on('chat_message')
