@@ -16,15 +16,15 @@ def send_recent_messages(count=100):
 
     # Get most recent message ids from database
     recent_message_ids = redis_db.zrange('messages:global', 0, count, desc=True)
-    recent_message_ids.reverse()
     message_list = []
 
     # Create list of message dicts
-    for message_id in recent_message_ids:
-        message = {}
+    for message_id in reversed(recent_message_ids):
         bytes_message = redis_db.hgetall(b'message:' + message_id)
+
         message = { key.decode() : value.decode() \
                    for key, value in bytes_message.items() }
+
         message_list.append(message)
 
     # Send the messages
