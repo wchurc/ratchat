@@ -1,8 +1,7 @@
-function escape(str) {
-	var div = document.createElement('div');
-	div.appendChild(document.createTextNode(str));
-	return div.innerHTML;
-}
+/*
+ * This file contains client-side SocketIO events and the functions that
+ * send and display chat messages.
+ */
 
 function update_chat(message, _cls) {
 	var cls = _cls ? _cls : '';

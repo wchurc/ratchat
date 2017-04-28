@@ -1,13 +1,15 @@
+"""
+This module contains Flask and Flask-SocketIO handlers.
+"""
 import html
 import time
 import uuid
 
-from flask import render_template, request, session
-from flask_socketio import emit, join_room, send
+from flask import render_template, session
+from flask_socketio import emit, join_room
 
 from ratchat import app, socketio, redis_db
-from ratchat.name_generator import get_name
-from ratchat.exceptions import InvalidNameError, InvalidCommandError
+from ratchat.exceptions import InvalidCommandError
 from ratchat.command_parser import execute_command
 from ratchat.utils import send_recent_messages, send_active_users, \
         create_username, unexpire, check_timeout, check_msg_length, \
@@ -18,7 +20,7 @@ thread = None
 
 
 def active_users_thread():
-    # Broadcast the names of all the users online once every second
+    """Broadcasts the names of all the users online once every second."""
     while True:
         send_active_users(broadcast=True)
         socketio.sleep(1)
@@ -26,7 +28,8 @@ def active_users_thread():
 
 @app.route('/')
 def main():
-    # Store a sid in the session if one doesn't already exist and serve index
+    """Serves the index page of the app and ensures that the session has a
+    unique identifier."""
     if not session.get('sid'):
         session['sid'] = uuid.uuid4().hex
     return render_template('index.html')
@@ -34,6 +37,9 @@ def main():
 
 @socketio.on('connect')
 def handle_connection():
+    """Handles a SocketIO connection. This must handle brand new sessions or
+    a connection after an existing session was interrupted (for example
+    the user refreshing the page)"""
     sid = session.get('sid')
 
     # Check for spamming
@@ -83,14 +89,16 @@ def handle_connection():
 
 @socketio.on('disconnect')
 def handle_user_disconnect():
-    # Set expiration for temporary data in the database rather than removing it
-    # immediately. This way the data won't be deleted if the page is refreshed.
+    """Handle a SocketIO disconnect event. This has to be recoverable to ensure
+    that refreshing the page does not destroy a user's chat session."""
     sid = session.get('sid')
+    # Set expiration for temporary data
     expire(sid)
 
 
 @socketio.on('chat_message')
 def handle_chat_message(message):
+    """Handles a SocketIO chat_message."""
     sid = session['sid']
 
     # Check for spamming
@@ -120,4 +128,3 @@ def handle_chat_message(message):
         msg_id = uuid.uuid4().hex
         redis_db.zadd('messages:global', time.time(), msg_id)
         redis_db.hmset('message:' + msg_id, message)
-

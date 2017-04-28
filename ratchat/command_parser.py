@@ -1,7 +1,11 @@
+"""
+This module parses chat messages beginning with '/' and attempts to execute
+any relevant commands.
+"""
 from flask_socketio import emit, join_room
-from ratchat import app, redis_db, socketio
+from ratchat import redis_db
 from ratchat.exceptions import InvalidCommandError, InvalidPasswordError
-from ratchat.utils import create_username, send_active_users, check_name_length, \
+from ratchat.utils import create_username, check_name_length, \
         send_server_msg
 
 
@@ -124,6 +128,7 @@ def login(sid, username, password=None):
 
 
 def send_help_message(sid):
+    """Emits a server message containing a list of available '/' commands."""
     msg = "Try the following commands:<br>" \
     '/msg otheruser message<br>' \
     '/login username password<br>' \

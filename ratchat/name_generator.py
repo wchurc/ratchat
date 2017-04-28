@@ -1,3 +1,6 @@
+"""
+This module provides a generator for unique names.
+"""
 default_names = {'anonymous'}
 
 
@@ -13,8 +16,8 @@ def name_gen():
         inc += 1
 
 
-ng = name_gen()
+_ng = name_gen()
+
 
 def get_name():
-    return ng.__next__()
-
+    return next(_ng)
